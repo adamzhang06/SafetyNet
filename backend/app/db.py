@@ -1,23 +1,19 @@
+import certifi
+
+from fastapi import Request
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.config import settings
 
-client: AsyncIOMotorClient | None = None
+
+def create_client() -> AsyncIOMotorClient:
+    """Create Motor client with Atlas TLS. Connection and ping happen in lifespan."""
+    return AsyncIOMotorClient(
+        settings.mongodb_uri,
+        tlsCAFile=certifi.where(),
+    )
 
 
-def get_db_sync():
-    global client
-    if client is None:
-        client = AsyncIOMotorClient(settings.mongodb_uri)
-    return client.get_database("saferound")
-
-
-async def get_db():
-    return get_db_sync()
-
-
-async def close_db():
-    global client
-    if client:
-        client.close()
-        client = None
+async def get_db(request: Request):
+    """Dependency that yields the database session from app.state (set in lifespan)."""
+    yield request.app.state.db

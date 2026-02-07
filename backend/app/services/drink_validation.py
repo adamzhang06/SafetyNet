@@ -1,14 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from app.db import get_db
 from app.models import ValidateDrinkRequest, ValidateDrinkResponse
-
 
 COOLDOWN_SECONDS = 120  # 2 minutes
 
 
-async def validate_drink(req: ValidateDrinkRequest) -> ValidateDrinkResponse:
-    db = await get_db()
+async def validate_drink(db, req: ValidateDrinkRequest) -> ValidateDrinkResponse:
     users = db.users
     drinks = db.drinks
 
@@ -26,7 +23,7 @@ async def validate_drink(req: ValidateDrinkRequest) -> ValidateDrinkResponse:
             message="Service denied. You are cut off.",
         )
 
-    now = req.scanned_at or datetime.utcnow()
+    now = req.scanned_at or datetime.now(timezone.utc)
     last_drink = await drinks.find_one(
         {"user_id": req.user_id},
         sort=[("timestamp", -1)],

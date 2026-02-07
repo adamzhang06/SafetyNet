@@ -9,7 +9,10 @@ from app.models import SobrietyResult, SobrietyTelemetry
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 
-async def get_sobriety_assessment(telemetry: SobrietyTelemetry) -> SobrietyResult:
+async def get_sobriety_assessment(
+    telemetry: SobrietyTelemetry,
+    http_client: httpx.AsyncClient,
+) -> SobrietyResult:
     """POST telemetry to Gemini; return parsed JSON { sobriety_score, recommendation, is_emergency }."""
     if not settings.google_gemini_api_key:
         return SobrietyResult(
@@ -29,13 +32,11 @@ async def get_sobriety_assessment(telemetry: SobrietyTelemetry) -> SobrietyResul
             "responseMimeType": "application/json",
         },
     }
-    async with httpx.AsyncClient() as client:
-        r = await client.post(
-            f"{GEMINI_URL}?key={settings.google_gemini_api_key}",
-            json=payload,
-            timeout=30.0,
-        )
-        r.raise_for_status()
+    r = await http_client.post(
+        f"{GEMINI_URL}?key={settings.google_gemini_api_key}",
+        json=payload,
+    )
+    r.raise_for_status()
     data = r.json()
     text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "{}")
     parsed = _parse_json_response(text)
@@ -64,4 +65,11 @@ def _parse_json_response(text: str) -> dict:
     if text.startswith("```"):
         text = re.sub(r"^```\w*\n?", "", text)
         text = re.sub(r"\n?```\s*$", "", text)
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError) as _:
+        return {
+            "sobriety_score": 50,
+            "recommendation": "Unable to assess. Response could not be parsed.",
+            "is_emergency": False,
+        }
