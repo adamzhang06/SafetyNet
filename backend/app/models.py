@@ -93,8 +93,9 @@ class GroupCreate(BaseModel):
 
 
 class GroupJoin(BaseModel):
-    code: str
     user_id: str
+    code: Optional[str] = None
+    group_id: Optional[str] = None
 
 
 class GroupNotify(BaseModel):

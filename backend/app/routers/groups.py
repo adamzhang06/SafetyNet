@@ -9,28 +9,21 @@ from app.models import GroupCreate, GroupJoin, GroupNotify
 
 router = APIRouter(prefix="/groups", tags=["groups"])
 
+
 @router.get("/list")
 async def list_groups(db=Depends(get_db)):
     """Return all group codes and member counts."""
     groups = await db.groups.find().to_list(length=100)
     result = [
         {
+            "group_id": str(g["_id"]),
             "code": g.get("code", ""),
-            "member_count": len(g.get("user_list", []))
+            "name": g.get("name", ""),
+            "member_count": len(g.get("member_ids", [])),
         }
         for g in groups
     ]
     return {"groups": result}
-import random
-import string
-from datetime import datetime, timezone
-
-from fastapi import APIRouter, Depends, HTTPException
-
-from app.db import get_db
-from app.models import GroupCreate, GroupJoin, GroupNotify
-
-router = APIRouter(prefix="/groups", tags=["groups"])
 
 
 def _generate_code() -> str:
@@ -56,10 +49,23 @@ async def create_group(body: GroupCreate, db=Depends(get_db)):
 
 @router.post("/join")
 async def join_group(body: GroupJoin, db=Depends(get_db)):
-    """Join a group by 6-digit code."""
-    group = await db.groups.find_one({"code": body.code.strip()})
+    """Join a group by group_id or 6-digit code."""
+    from bson import ObjectId
+
+    if not body.group_id and not (body.code and body.code.strip()):
+        raise HTTPException(400, "Provide group_id or code.")
+
+    group = None
+    if body.group_id:
+        try:
+            oid = ObjectId(body.group_id)
+            group = await db.groups.find_one({"_id": oid})
+        except Exception:
+            pass
+    if not group and body.code and body.code.strip():
+        group = await db.groups.find_one({"code": body.code.strip()})
     if not group:
-        raise HTTPException(404, "Group not found. Check the code.")
+        raise HTTPException(404, "Group not found. Check the code or group id.")
     member_ids = group.get("member_ids") or []
     if body.user_id in member_ids:
         return {"ok": True, "group_id": str(group["_id"]), "message": "Already in group"}
