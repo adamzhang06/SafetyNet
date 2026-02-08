@@ -53,4 +53,4 @@ Building BarBabes taught us how to bridge the gap between digital safety and phy
 
 ## What's next for BarBabes
 
-BarBabes aims to expand the hardware, potentially integrating smart breathalyzer technology for more accurate BAC tracking. We also aim to enhance the social experience with features such as sharable summaries of highlights throughout the night, fun group tasks, and a sobriety group leaderboard. Additionally, we plan to establish credible enterprise partnerships with college bars to integrate BarBabes into their responsible service initiatives.
+BarBabes aims to expand the hardware, potentially integrating smart breathalyzer technology for more accurate BAC tracking. We also aim to enhance the social experience with features such as shareable summaries of highlights throughout the night, fun group tasks, and a sobriety group leaderboard. Additionally, we plan to establish credible enterprise partnerships with college bars to integrate BarBabes into their responsible service initiatives.
