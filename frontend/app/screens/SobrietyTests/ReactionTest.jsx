@@ -14,7 +14,23 @@ export default function ReactionTestScreen() {
   const [testIndex, setTestIndex] = useState(0); // 0-4
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
-  const { setReactionLatencies } = useUser?.() || {};
+  const { setReactionLatencies, calculateBAC, apiBase } = useUser() || {};
+
+  const submitSobrietyAssess = async (latenciesMs, currentBAC) => {
+    const base = apiBase || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+    try {
+      await fetch(`${base}/sobriety/assess`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          straight_line_jitter: [],
+          reaction_latencies_ms: latenciesMs,
+          typing_test: { typo_count: 0, speed_wpm: 0, text_entered: '' },
+          bac: typeof currentBAC === 'number' ? currentBAC : 0,
+        }),
+      });
+    } catch (_) {}
+  };
 
   const handlePress = () => {
     if (gameState === 'idle' || gameState === 'finished' || gameState === 'early') {
@@ -38,20 +54,20 @@ export default function ReactionTestScreen() {
       setScore(reactionTime);
       setReactionTimes((prev) => {
         const updated = [...prev, reactionTime];
-        if (updated.length === 5 && setReactionLatencies) {
-          setReactionLatencies(updated); // Save to context for BAC
+        if (updated.length === 5) {
+          if (setReactionLatencies) setReactionLatencies(updated);
+          setGameState('finished');
+          const bac = typeof calculateBAC === 'function' ? calculateBAC() : 0;
+          submitSobrietyAssess(updated, bac);
         }
         return updated;
       });
       setTestIndex((idx) => idx + 1);
-      // If fewer than 5 tests, auto-start next
       if (reactionTimes.length + 1 < 5) {
         setTimeout(() => {
           setGameState('idle');
           setScore(0);
-        }, 600); // brief pause for feedback
-      } else {
-        setGameState('finished');
+        }, 600);
       }
     }
   };

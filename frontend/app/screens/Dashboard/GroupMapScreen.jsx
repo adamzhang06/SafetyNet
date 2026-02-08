@@ -12,26 +12,36 @@ import {
 } from 'react-native';
 import MainLayout from '../../MainLayout';
 import BottomNavBar from '../../components/BottomNavBar';
-import { contactData } from '../../data/contacts';
+import { useUser } from '../../context/UserContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const GROUP_MEMBER_NAMES = [
-  'Designated Diana',
-  'Martini Mandy',
-  'Cosmo Cassidy',
-  'Bubbly Bonnie',
-  'Sangria Samantha',
-];
-const MOCK_PEOPLE = contactData
-  .filter((c) => GROUP_MEMBER_NAMES.includes(c.name))
-  .sort((a, b) => GROUP_MEMBER_NAMES.indexOf(a.name) - GROUP_MEMBER_NAMES.indexOf(b.name))
-  .map((c, i) => ({
-    ...c,
-    color: c.statusColor || '#C44',
-    x: [18, 48, 72, 78, 82][i] ?? 20 + i * 10,
-    y: [28, 52, 55, 22, 26][i] ?? 30 + i * 5,
-  }));
+function bacToColor(bac) {
+  if (bac === 0) return 'rgb(0,180,255)';
+  if (bac <= 0.05) return 'rgb(115,255,136)';
+  if (bac <= 0.12) return 'rgb(255,192,91)';
+  if (bac <= 0.19) return 'rgb(255,140,0)';
+  return 'rgb(234,23,20)';
+}
+
+function membersToMapPeople(members) {
+  if (!Array.isArray(members) || members.length === 0) return [];
+  return members.map((m, i) => {
+    const name = m.name || [m.first_name, m.last_name].filter(Boolean).join(' ') || 'Unknown';
+    const initials = (m.first_name?.[0] || '') + (m.last_name?.[0] || '') || name.slice(0, 2).toUpperCase() || '?';
+    const bac = typeof m.bac === 'number' ? m.bac : 0;
+    return {
+      id: m.user_id || String(i),
+      name,
+      initials,
+      bac,
+      color: bacToColor(bac),
+      phone: m.phone,
+      x: [18, 48, 72, 78, 82][i % 5] ?? 20 + (i % 5) * 10,
+      y: [28, 52, 55, 22, 26][i % 5] ?? 30 + (i % 5) * 5,
+    };
+  });
+}
 
 const CENTER_LOCATION = "Harry's Chocolate Shop, West Lafayette, IN 47906";
 
@@ -108,9 +118,11 @@ function PersonRow({ person, onBellPress }) {
 }
 
 export default function GroupMapScreen() {
+  const { groupMembers } = useUser();
+  const mapPeople = membersToMapPeople(groupMembers);
   const sheetHeight = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
   const [isExpanded, setIsExpanded] = useState(false);
-  const [toast, setToast] = useState(null); // { message: string, key: number }
+  const [toast, setToast] = useState(null);
 
   const expandSheet = () => {
     setIsExpanded(true);
@@ -175,7 +187,7 @@ export default function GroupMapScreen() {
             resizeMode="cover"
           />
           <View style={styles.dotsContainer} pointerEvents="box-none">
-            {MOCK_PEOPLE.map((person) => (
+            {mapPeople.map((person) => (
               <PersonDot key={person.id} person={person} />
             ))}
           </View>
@@ -192,7 +204,7 @@ export default function GroupMapScreen() {
             contentContainerStyle={styles.sheetScrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {MOCK_PEOPLE.map((person) => (
+            {mapPeople.map((person) => (
               <PersonRow key={person.id} person={person} onBellPress={handleBellPress} />
             ))}
           </ScrollView>

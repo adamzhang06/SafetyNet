@@ -1,4 +1,4 @@
-const API_URL = process.env.API_URL;
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 // Profile photo button with silhouette logic
 import { useUser } from "../../context/UserContext";
 import React, { useState } from "react";

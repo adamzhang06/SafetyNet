@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,9 +7,6 @@ import {
   ScrollView,
   Alert,
   Linking,
-  Modal,
-  TextInput,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -20,82 +17,25 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 const STATUS_COLORS = { safe: '#4CAF50', caution: '#FFC107', alert: '#F44336' };
 
 export default function GroupScreen() {
-  const { userId, firstName, lastName } = useUser();
-  const [groupId, setGroupId] = useState(null);
-  const [groupCode, setGroupCode] = useState('');
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [joinModalVisible, setJoinModalVisible] = useState(false);
-  const [joinCode, setJoinCode] = useState('');
-  const [joinLoading, setJoinLoading] = useState(false);
-
-  const loadMembers = useCallback(async (gid) => {
-    if (!gid) return;
-    try {
-      const res = await fetch(`${API_BASE}/groups/${gid}/members`);
-      if (res.ok) {
-        const data = await res.json();
-        setMembers(data.members || []);
-      }
-    } catch (_) {
-      setMembers([]);
-    }
-  }, []);
+  const {
+    userId,
+    firstName,
+    lastName,
+    groupId,
+    groupCode,
+    groupMembers,
+    refreshGroupMembers,
+  } = useUser();
 
   useEffect(() => {
-    if (groupId) loadMembers(groupId);
-  }, [groupId, loadMembers]);
+    if (groupId) refreshGroupMembers();
+  }, [groupId]);
 
-  const handleCreateGroup = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/groups`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId }),
-      });
-      if (!res.ok) throw new Error('Failed to create group');
-      const data = await res.json();
-      setGroupId(data.group_id);
-      setGroupCode(data.code || '');
-      await loadMembers(data.group_id);
-      Alert.alert('Group Created', `Share this code with friends: ${data.code}`);
-    } catch (e) {
-      Alert.alert('Error', e.message || 'Could not create group');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleJoinGroup = async () => {
-    const code = joinCode.replace(/\D/g, '').slice(0, 6);
-    if (code.length !== 6) {
-      Alert.alert('Invalid Code', 'Enter a 6-digit code.');
-      return;
-    }
-    setJoinLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/groups/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, user_id: userId }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Invalid or expired code');
-      }
-      const data = await res.json();
-      setGroupId(data.group_id);
-      setGroupCode(code);
-      setJoinModalVisible(false);
-      setJoinCode('');
-      await loadMembers(data.group_id);
-    } catch (e) {
-      Alert.alert('Join Failed', e.message || 'Could not join group');
-    } finally {
-      setJoinLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!groupId) return;
+    const interval = setInterval(refreshGroupMembers, 15000);
+    return () => clearInterval(interval);
+  }, [groupId, refreshGroupMembers]);
 
   const handleProfilePress = () => router.push('/profile');
   const handleViewMapPress = () => router.push('/dashboard/group-map');
@@ -135,18 +75,13 @@ export default function GroupScreen() {
             <View style={styles.buttonGroup}>
               <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={handleCreateGroup}
-                disabled={loading}
+                onPress={() => router.push('/group/create')}
               >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>Create Group</Text>
-                )}
+                <Text style={styles.primaryButtonText}>Create Group</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.secondaryButton}
-                onPress={() => setJoinModalVisible(true)}
+                onPress={() => router.push('/group/join')}
               >
                 <Text style={styles.secondaryButtonText}>Join Group</Text>
               </TouchableOpacity>
@@ -173,10 +108,10 @@ export default function GroupScreen() {
             </TouchableOpacity>
 
             <Text style={styles.sectionTitle}>Group members</Text>
-            {members.length === 0 ? (
+            {(groupMembers || []).length === 0 ? (
               <Text style={styles.emptyText}>No members yet. Share the code to invite.</Text>
             ) : (
-              members.map((person) => (
+              (groupMembers || []).map((person) => (
                 <View key={person.user_id} style={styles.memberCard}>
                   <View style={styles.memberLeft}>
                     <View style={[styles.memberAvatar, { backgroundColor: '#333' }]}>
@@ -206,47 +141,6 @@ export default function GroupScreen() {
           </>
         )}
       </ScrollView>
-
-      <Modal
-        visible={joinModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setJoinModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Join Group</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={joinCode}
-              onChangeText={(t) => setJoinCode(t.replace(/\D/g, '').slice(0, 6))}
-              placeholder="6-digit code"
-              placeholderTextColor="#999"
-              keyboardType="number-pad"
-              maxLength={6}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButtonPrimary}
-                onPress={handleJoinGroup}
-                disabled={joinLoading || joinCode.length !== 6}
-              >
-                {joinLoading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.modalButtonText}>Join</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalButtonSecondary}
-                onPress={() => { setJoinModalVisible(false); setJoinCode(''); }}
-              >
-                <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -450,58 +344,5 @@ const styles = StyleSheet.create({
   },
   actionIcon: {
     fontSize: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 20,
-    padding: 24,
-    width: '100%',
-    maxWidth: 320,
-  },
-  modalTitle: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalInput: {
-    backgroundColor: '#333',
-    borderRadius: 12,
-    padding: 16,
-    color: '#FFF',
-    fontSize: 24,
-    letterSpacing: 8,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalButtons: {
-    gap: 12,
-  },
-  modalButtonPrimary: {
-    backgroundColor: '#7F3B4A',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  modalButtonSecondary: {
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalButtonTextSecondary: {
-    color: '#9E9E9E',
-    fontSize: 16,
   },
 });

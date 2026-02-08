@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Alert,
   Linking,
   ActivityIndicator,
 } from 'react-native';
@@ -16,6 +15,14 @@ import BottomNavBar from '../../components/BottomNavBar';
 import toastStyles from '../../components/ToastStyles';
 import { useUser } from '../../context/UserContext';
 
+let NfcManager;
+try {
+  NfcManager = require('react-native-nfc-manager').default;
+} catch (_) {
+  NfcManager = null;
+}
+const GRAMS_PER_DRINK_NFC = 14;
+
 const { width } = Dimensions.get('window');
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -24,44 +31,59 @@ const GRAMS_PER_DRINK = 14;
 
 const Dashboard = () => {
   const router = useRouter();
-  const { userId, weight, gender, firstName, lastName } = useUser();
+  const {
+    userId,
+    weight,
+    gender,
+    drinkLog,
+    addDrink,
+    removeLastDrink,
+    calculateBAC: contextCalculateBAC,
+    reactionLatencies,
+    apiBase,
+  } = useUser();
   const [bac, setBac] = useState(0);
   const [recommendation, setRecommendation] = useState('');
-  const [drinks, setDrinks] = useState(0);
-  const [timeElapsedMinutes, setTimeElapsedMinutes] = useState(0);
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [reactionTimeMs, setReactionTimeMs] = useState(null); // mock or from game
+  const showToastRef = useRef(() => {});
 
-  // Data guard: if weight or gender missing, block dashboard until user goes to Profile
+  const base = apiBase || API_BASE;
+  const totalAlcoholGrams = drinkLog.reduce((s, e) => s + (e.alcohol_grams || 0), 0);
+  const firstDrinkTs = drinkLog.length ? Math.min(...drinkLog.map((e) => e.timestamp || 0)) : 0;
+  const timeElapsedMinutes = firstDrinkTs ? (Date.now() - firstDrinkTs) / (1000 * 60) : 0;
+  const drinkCount = drinkLog.length;
+
   const hasWeight = weight != null && weight !== '' && !isNaN(parseFloat(weight)) && parseFloat(weight) > 0;
   const hasGender = gender === 'Male' || gender === 'Female';
   const profileIncomplete = !hasWeight || !hasGender;
+
+  const reactionTimeMs = reactionLatencies?.length
+    ? reactionLatencies.reduce((a, b) => a + b, 0) / reactionLatencies.length
+    : null;
 
   const calculateBAC = useCallback(async () => {
     const w = parseFloat(weight, 10);
     if (!weight || isNaN(w) || w <= 0) return;
     const sex = gender === 'Male' ? 'male' : gender === 'Female' ? 'female' : 'male';
     const weight_kg = w * 0.453592;
-    const alcohol_grams = drinks * GRAMS_PER_DRINK;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/bac/estimate`, {
+      const res = await fetch(`${base}/bac/estimate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: userId || 'anonymous',
           weight_kg,
           sex,
-          alcohol_grams,
+          alcohol_grams: totalAlcoholGrams,
           time_elapsed_minutes: timeElapsedMinutes,
         }),
       });
       if (!res.ok) throw new Error('BAC estimate failed');
       const data = await res.json();
       setBac(data.bac ?? 0);
-      // Fetch Gemini recommendation
-      const recRes = await fetch(`${API_BASE}/sobriety/recommendation`, {
+      const recRes = await fetch(`${base}/sobriety/recommendation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -81,22 +103,53 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [userId, weight, gender, drinks, timeElapsedMinutes, reactionTimeMs]);
+  }, [userId, weight, gender, totalAlcoholGrams, timeElapsedMinutes, reactionTimeMs, base]);
 
   useEffect(() => {
-    if (weight && gender && (drinks > 0 || bac > 0)) {
+    if (weight && gender && (drinkCount > 0 || bac > 0)) {
       calculateBAC();
-    } else if (drinks === 0 && timeElapsedMinutes === 0) {
+    } else if (drinkCount === 0) {
       setBac(0);
       setRecommendation('');
     }
-  }, [drinks, timeElapsedMinutes, weight, gender]);
+  }, [drinkCount, weight, gender]);
 
-  const showToast = (message) => {
+  useEffect(() => {
+    if (!NfcManager || !addDrink) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const supported = await NfcManager.isSupported();
+        if (!supported || cancelled) return;
+        await NfcManager.start();
+        await NfcManager.registerTagEvent((tag) => {
+          if (cancelled) return;
+          let grams = GRAMS_PER_DRINK_NFC;
+          try {
+            const payload = tag?.ndefMessage?.[0]?.payload || tag?.payload;
+            if (payload) {
+              const str = typeof payload === 'string' ? payload : (payload && Array.isArray(payload) ? String.fromCharCode(...payload) : '');
+              const parsed = JSON.parse(str || '{}');
+              if (typeof parsed.alcohol_grams === 'number' && parsed.alcohol_grams > 0) grams = parsed.alcohol_grams;
+            }
+          } catch (_) {}
+          addDrink(grams);
+          showToastRef.current(`NFC: drink added (${grams}g)`);
+        });
+      } catch (_) {}
+    })();
+    return () => {
+      cancelled = true;
+      NfcManager?.unregisterTagEvent?.().catch(() => {});
+    };
+  }, [addDrink]);
+
+  const showToast = useCallback((message) => {
     const key = Date.now();
     setToast({ message, key });
     setTimeout(() => setToast((t) => (t && t.key === key ? null : t)), 2000);
-  };
+  }, []);
+  showToastRef.current = showToast;
 
   const handleNotifyGroup = useCallback(async () => {
     try {
@@ -166,14 +219,14 @@ const Dashboard = () => {
             <View style={styles.stepper}>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => setDrinks((d) => Math.max(0, d - 1))}
+                onPress={() => removeLastDrink()}
               >
                 <Text style={styles.stepperBtnText}>−</Text>
               </TouchableOpacity>
-              <Text style={styles.stepperValue}>{drinks}</Text>
+              <Text style={styles.stepperValue}>{drinkCount}</Text>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => setDrinks((d) => d + 1)}
+                onPress={() => addDrink(GRAMS_PER_DRINK)}
               >
                 <Text style={styles.stepperBtnText}>+</Text>
               </TouchableOpacity>
@@ -182,20 +235,26 @@ const Dashboard = () => {
           <TouchableOpacity style={styles.recalcButton} onPress={calculateBAC}>
             <Text style={styles.recalcButtonText}>Recalculate BAC</Text>
           </TouchableOpacity>
-          {/* NFC scaffold (commented): use expo-nfc-manager to scan tag then increment drinks.
-          import NfcManager from 'expo-nfc-manager';
-          useEffect(() => { NfcManager.start(); return () => NfcManager.stop(); }, []);
-          NfcManager.registerTagEvent(tag => { setDrinks(d => d + 1); showToast('Drink added'); });
-          NfcManager.unregisterTagEvent() on unmount. */}
           <TouchableOpacity
             style={styles.nfcButton}
             onPress={() => {
-              setDrinks((d) => d + 1);
-              showToast('NFC Tap Drink');
+              addDrink(GRAMS_PER_DRINK);
+              showToast('Drink added (tap or NFC)');
             }}
           >
             <Text style={styles.nfcButtonText}>NFC Tap Drink</Text>
           </TouchableOpacity>
+          {__DEV__ && (
+            <TouchableOpacity
+              style={[styles.nfcButton, { marginTop: 4, opacity: 0.7 }]}
+              onPress={() => {
+                addDrink(GRAMS_PER_DRINK);
+                showToast('Debug: drink added');
+              }}
+            >
+              <Text style={styles.nfcButtonText}>Debug: Add Drink</Text>
+            </TouchableOpacity>
+          )}
         </View>
         <Text style={styles.statusText}>{statusText}</Text>
         <View style={styles.buttonRow}>
