@@ -13,16 +13,28 @@ import {
 import MainLayout from '../../MainLayout';
 import BottomNavBar from '../../components/BottomNavBar';
 
+// Import shared contact data
+import { contactData } from '../../data/contacts';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Each person is an object: id, name, initials, color, position (x%, y%) for the map dot
-const MOCK_PEOPLE = [
-  { id: '1', name: 'Crunk Cynthia', initials: 'CC', color: '#C44', x: 18, y: 28 },
-  { id: '2', name: 'Designated Dave', initials: 'DD', color: '#7B68EE', x: 48, y: 52 },
-  { id: '3', name: 'Green Mike', initials: 'GM', color: '#4CAF50', x: 72, y: 55 },
-  { id: '4', name: 'Brown Sam', initials: 'GM', color: '#CD853F', x: 78, y: 22 },
-  { id: '5', name: 'Orange Alex', initials: 'GM', color: '#D2691E', x: 82, y: 26 },
+// Include Designated Driver at the top, then alliterative group members
+const GROUP_MEMBER_NAMES = [
+  'Designated Diana',
+  'Martini Mandy',
+  'Cosmo Cassidy',
+  'Bubbly Bonnie',
+  'Sangria Samantha',
 ];
+const MOCK_PEOPLE = contactData
+  .filter(c => GROUP_MEMBER_NAMES.includes(c.name))
+  .sort((a, b) => GROUP_MEMBER_NAMES.indexOf(a.name) - GROUP_MEMBER_NAMES.indexOf(b.name))
+  .map((c, i) => ({
+    ...c,
+    color: c.statusColor || '#C44',
+    x: [18, 48, 72, 78, 82][i] || 20 + i * 10, // fallback positions
+    y: [28, 52, 55, 22, 26][i] || 30 + i * 5,
+  }));
 
 const CENTER_LOCATION = "Harry's Chocolate Shop, West Lafayette, IN 47906";
 
@@ -48,6 +60,12 @@ function PersonDot({ person, onPress }) {
       ]}
     >
       <Text style={styles.dotInitials}>{person.initials}</Text>
+      {/* Show car icon if Designated Diana and BAC is 0.00, overlapping bottom edge */}
+      {person.bac === 0 && (
+        <View style={styles.carIconContainer}>
+          <Text style={styles.carIcon}>🚗</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -62,13 +80,23 @@ function SheetHandle({ onPress }) {
 }
 
 // Single row in the sheet: avatar, name, chat/call/alert icons
-function PersonRow({ person }) {
+function PersonRow({ person, onBellPress }) {
   return (
     <View style={styles.personRow}>
-      <View style={[styles.personAvatar, { backgroundColor: person.color }]}>
+      {/* Avatar stays neutral, must be a <Text> for initials and car icon */}
+      <View style={[styles.personAvatar, { backgroundColor: '#333', position: 'relative' }]}> 
+        {/* Center initials absolutely */}
         <Text style={styles.personAvatarText}>{person.initials}</Text>
+        {/* Car icon overlaps bottom edge of avatar if Designated Diana and BAC is 0.00 */}
+        {person.name === 'Designated Diana' && person.bac === 0 && (
+          <Text style={styles.carIconInline}>🚗</Text>
+        )}
       </View>
-      <Text style={styles.personName} numberOfLines={1}>{person.name}</Text>
+      <Text
+        style={[styles.personNameBg, { backgroundColor: person.color }]} numberOfLines={1}
+      >
+        <Text style={styles.personName}>{person.name}</Text>
+      </Text>
       <View style={styles.personActions}>
         <TouchableOpacity style={styles.actionIcon}>
           <Text style={styles.actionIconText}>💬</Text>
@@ -76,7 +104,7 @@ function PersonRow({ person }) {
         <TouchableOpacity style={styles.actionIcon}>
           <Text style={styles.actionIconText}>📞</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionIcon}>
+        <TouchableOpacity style={styles.actionIcon} onPress={() => onBellPress(person)}>
           <Text style={styles.actionIconText}>🔔</Text>
         </TouchableOpacity>
       </View>
@@ -87,6 +115,7 @@ function PersonRow({ person }) {
 export default function GroupMapScreen() {
   const sheetHeight = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
   const [isExpanded, setIsExpanded] = useState(false);
+  const [toast, setToast] = useState(null); // { message: string, key: number }
 
   const expandSheet = () => {
     setIsExpanded(true);
@@ -121,48 +150,99 @@ export default function GroupMapScreen() {
     })
   ).current;
 
+  // Show toast for 2 seconds
+  const showToast = (message) => {
+    const key = Date.now();
+    setToast({ message, key });
+    setTimeout(() => {
+      setToast((t) => (t && t.key === key ? null : t));
+    }, 2000);
+  };
+
+  // Bell button handler
+  const handleBellPress = (person) => {
+    const bac = typeof person.bac === 'number' ? person.bac.toFixed(2) : 'N/A';
+    showToast(`You alerted ${person.name} of their BAC status (BAC: ${bac})`);
+    // Here you could also trigger a real notification/send event
+  };
+
   return (
     <MainLayout>
       <View style={styles.container}>
-      {/* ...existing code... */}
+        {/* ...existing code... */}
 
-      {/* Map area: title, location, pin, dots */}
-      <View style={styles.mapArea}>
-        <Text style={styles.title}>Your Group</Text>
-        <Text style={styles.location}>{CENTER_LOCATION}</Text>
-        <View style={styles.pinWrapper}>
-          <Text style={styles.pinIcon}>📍</Text>
+        {/* Map area: title, location, pin, dots */}
+        <View style={styles.mapArea}>
+          <Text style={[styles.title, { marginTop: 0, marginBottom: 0 }]}>Your Group</Text>
+          <Text style={[styles.location, { marginTop: 0, marginBottom: 4 }]}>{CENTER_LOCATION}</Text>
+          {/* Harry's background image */}
+          <Image
+            source={require('../../assets/harrys.png')}
+            style={styles.harrysBg}
+            resizeMode="cover"
+          />
+          {/* Dots – each person as their own positioned object */}
+          <View style={styles.dotsContainer} pointerEvents="box-none">
+            {MOCK_PEOPLE.map((person) => (
+              <PersonDot key={person.id} person={person} />
+            ))}
+          </View>
         </View>
-        {/* Dots – each person as their own positioned object */}
-        <View style={styles.dotsContainer} pointerEvents="box-none">
-          {MOCK_PEOPLE.map((person) => (
-            <PersonDot key={person.id} person={person} />
-          ))}
-        </View>
-      </View>
 
-      {/* Slide-up bottom sheet */}
-      <Animated.View
-        style={[styles.sheet, { height: sheetHeight }]}
-        {...panResponder.panHandlers}
-      >
-        <SheetHandle onPress={toggleSheet} />
-        <ScrollView
-          style={styles.sheetScroll}
-          contentContainerStyle={styles.sheetScrollContent}
-          showsVerticalScrollIndicator={false}
+        {/* Slide-up bottom sheet */}
+        <Animated.View
+          style={[styles.sheet, { height: sheetHeight }]}
+          {...panResponder.panHandlers}
         >
-          {MOCK_PEOPLE.map((person) => (
-            <PersonRow key={person.id} person={person} />
-          ))}
-        </ScrollView>
-      </Animated.View>
+          <SheetHandle onPress={toggleSheet} />
+          <ScrollView
+            style={styles.sheetScroll}
+            contentContainerStyle={styles.sheetScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {MOCK_PEOPLE.map((person) => (
+              <PersonRow key={person.id} person={person} onBellPress={handleBellPress} />
+            ))}
+          </ScrollView>
+        </Animated.View>
 
-      <BottomNavBar />
+        {/* Toast notification */}
+        {toast && (
+          <View style={toastStyles.toastContainer} pointerEvents="none">
+            <Text style={toastStyles.toastText}>{toast.message}</Text>
+          </View>
+        )}
+
+        <BottomNavBar />
       </View>
     </MainLayout>
   );
 }
+// Toast styles
+const toastStyles = StyleSheet.create({
+  toastContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 100,
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  toastText: {
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    color: '#fff',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    fontSize: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -222,20 +302,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 26,
     fontWeight: '700',
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 0,
   },
   location: {
     color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
     textAlign: 'center',
     paddingHorizontal: 24,
-    marginBottom: 12,
-  },
-  pinWrapper: {
-    marginBottom: 16,
-  },
-  pinIcon: {
-    fontSize: 32,
+    marginTop: 0,
+    marginBottom: 4,
   },
   dotsContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -258,6 +334,49 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  carIcon: {
+    fontSize: 18,
+    textAlign: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  carIconContainer: {
+    position: 'absolute',
+    left: '50%',
+    bottom: -12,
+    transform: [{ translateX: -12 }],
+    zIndex: 10,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carIconContainerProfile: {
+    position: 'absolute',
+    left: '50%',
+    bottom: -10,
+    transform: [{ translateX: -12 }],
+    zIndex: 10,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carIconInline: {
+    fontSize: 18,
+    position: 'absolute',
+    left: '20%',
+    bottom: -12,
+    transform: [{ translateX: -12 }], // Center horizontally
+    zIndex: 10,
+    width: 24,
+    height: 24,
+    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sheet: {
     position: 'absolute',
@@ -298,6 +417,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: '#333',
+    position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -305,9 +426,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+    textAlign: 'center',
+  },
+  personNameBg: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginRight: 8,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff', // Needed for <Text>
+    overflow: 'hidden',
   },
   personName: {
-    flex: 1,
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
@@ -315,6 +447,10 @@ const styles = StyleSheet.create({
   personActions: {
     flexDirection: 'row',
     gap: 12,
+    marginLeft: 'auto', // Push icons to the right
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 110, // Ensures consistent alignment
   },
   actionIcon: {
     padding: 6,
@@ -338,5 +474,16 @@ const styles = StyleSheet.create({
   },
   navIconLabel: {
     fontSize: 24,
+  },
+  harrysBg: {
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+    opacity: 0.65,
   },
 });

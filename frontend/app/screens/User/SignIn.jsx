@@ -1,63 +1,118 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, Dimensions, Pressable } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Image, StyleSheet, Dimensions, Pressable, TextInput, Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useRouter } from 'expo-router';
 
-const Screen = () => {
-	const router = useRouter();
-	return (
-		<View style={styles.container}>
-			{/* Background Blobs */}
-			{/* Note: Standard RN Views do not support CSS 'filter: blur'.
-					For actual blurs, use react-native-svg or specific blur libraries. */}
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
 
-			{/* Bottom Red Blob */}
-			<View style={[styles.blob, styles.blobBottomRed]} />
-			{/* Bottom Light Blob */}
-			<View style={[styles.blob, styles.blobBottomLight]} />
-			{/* Top Red Blob (Right) */}
-			<View style={[styles.blob, styles.blobTopRedRight]} />
-			{/* Top Light Blob (Right) */}
-			<View style={[styles.blob, styles.blobTopLightRight]} />
-			{/* Top Red Blob (Left) */}
-			<View style={[styles.blob, styles.blobTopRedLeft]} />
-			{/* Top Light Blob (Left) */}
-			<View style={[styles.blob, styles.blobTopLightLeft]} />
-			{/* Main Center Image */}
-			<Image
-				style={styles.mainImage}
-				source={require('../../assets/barbabes_logo.png')}
-			/>
-			{/* Google Sign In Button */}
-			<View style={styles.googleBtnContainer}>
-				<View style={styles.googleBtnBackground} />
-				<Image
-					style={styles.googleIcon}
-					source={require('../../assets/google-color.png')}
-				/>
-				<Text style={styles.googleText}>Sign in with Google</Text>
-			</View>
-			{/* Divider Text */}
-			<View style={styles.dividerContainer}>
-				<Text style={styles.dividerText}>or with email and password</Text>
-			</View>
-			{/* Input Boxes */}
-			{/* Input 1 (Email) Box */}
-			<View style={styles.inputBoxEmail} />
-			{/* Input 1 Label - Positioned absolutely as per HTML design */}
-			<Text style={styles.emailLabel}>Email address</Text>
-			{/* Input 2 (Password) Box */}
-			<View style={styles.inputBoxPassword} />
-			{/* Input 2 Label */}
-			<Text style={styles.passwordLabel}>Password</Text>
-			{/* Sign Up Button */}
-			<Pressable
-				style={styles.signupBtnBackground}
-				onPress={() => router.push('/screens/User/Profile')}
-			>
-				<Text style={styles.signupBtnText}>SIGN UP NOW</Text>
-			</Pressable>
-		</View>
-	);
+const Screen = () => {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const handleGoogleSignIn = () => {
+    // TODO: Integrate Google sign-in logic here
+    Alert.alert("Google Sign-In", "Google sign-in pressed!");
+  };
+
+  const handleSignUp = () => {
+    let valid = true;
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address.");
+      valid = false;
+    } else {
+      setEmailError("");
+    }
+    if (!password || password.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      valid = false;
+    } else {
+      setPasswordError("");
+    }
+    if (valid) {
+      router.push('/screens/User/Profile');
+    }
+  };
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
+        {/* Background Blobs */}
+        {/* Note: Standard RN Views do not support CSS 'filter: blur'.
+            For actual blurs, use react-native-svg or specific blur libraries. */}
+
+        {/* Bottom Red Blob */}
+        <View style={[styles.blob, styles.blobBottomRed]} />
+        {/* Bottom Light Blob */}
+        <View style={[styles.blob, styles.blobBottomLight]} />
+        {/* Top Red Blob (Right) */}
+        <View style={[styles.blob, styles.blobTopRedRight]} />
+        {/* Top Light Blob (Right) */}
+        <View style={[styles.blob, styles.blobTopLightRight]} />
+        {/* Top Red Blob (Left) */}
+        <View style={[styles.blob, styles.blobTopRedLeft]} />
+        {/* Top Light Blob (Left) */}
+        <View style={[styles.blob, styles.blobTopLightLeft]} />
+        {/* Main Center Image */}
+        <Image
+          style={[styles.mainImage, { top: 60 }]}
+          source={require('../../assets/barbabes_logo.png')}
+        />
+        {/* Email/Password UI below logo */}
+        {/* Input 1 (Email) Box */}
+        <View style={[styles.inputBoxEmail, { top: 300 }]} />
+        <TextInput
+          style={[styles.textInput, { left: 60, top: 300, position: 'absolute', width: 270, height: 40, color: 'white' }]}
+          placeholder="Email address"
+          placeholderTextColor="#ccc"
+          value={email}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          onChangeText={setEmail}
+        />
+        {emailError ? (
+          <Text style={{ color: 'red', position: 'absolute', left: 60, top: 340, fontSize: 12, width: 270, textAlign: 'left', backgroundColor: 'transparent', paddingHorizontal: 2, lineHeight: 14 }} numberOfLines={2} ellipsizeMode="tail">{emailError}</Text>
+        ) : null}
+        {/* Input 2 (Password) Box */}
+        <View style={[styles.inputBoxPassword, { top: 370 }]} />
+        <TextInput
+          style={[styles.textInput, { left: 60, top: 370, position: 'absolute', width: 270, height: 40, color: 'white' }]}
+          placeholder="Password"
+          placeholderTextColor="#ccc"
+          value={password}
+          secureTextEntry
+          onChangeText={setPassword}
+        />
+        {passwordError ? (
+          <Text style={{ color: 'red', position: 'absolute', left: 60, top: 410, fontSize: 12, width: 270, textAlign: 'left', backgroundColor: 'transparent', paddingHorizontal: 2, lineHeight: 14 }} numberOfLines={2} ellipsizeMode="tail">{passwordError}</Text>
+        ) : null}
+        {/* Sign Up Button */}
+        <Pressable
+          style={[styles.signupBtnBackground, { top: 450 }]}
+          onPress={handleSignUp}
+        >
+          <Text style={styles.signupBtnText}>SIGN UP NOW</Text>
+        </Pressable>
+        {/* Divider Text */}
+        <View style={[styles.dividerContainer, { top: 530 }]}>
+          <Text style={styles.dividerText}>or you can</Text>
+        </View>
+        {/* Google Sign In Button (now below email/password) */}
+        <Pressable style={[styles.googleBtnContainerBottom, { bottom: 130 }]} onPress={handleGoogleSignIn} accessibilityRole="button">
+          <View style={styles.googleBtnBackgroundBottom} />
+          <Image
+            style={styles.googleIcon}
+            source={require('../../assets/google-color.png')}
+          />
+          <Text style={styles.googleText}>Sign in with Google</Text>
+        </Pressable>
+      </View>
+    </TouchableWithoutFeedback>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -157,23 +212,23 @@ const styles = StyleSheet.create({
 		top: 80,
 		position: "absolute",
 	},
-	googleBtnContainer: {
+	googleBtnContainerBottom: {
 		width: 310,
 		height: 62,
 		left: 41,
-		top: 361,
 		position: "absolute",
+		bottom: 40,
+		justifyContent: "center",
+		alignItems: "center",
 	},
-	googleBtnBackground: {
+	googleBtnBackgroundBottom: {
 		width: 310,
 		height: 62,
 		left: 0,
 		top: 0,
 		position: "absolute",
-		backgroundColor: "rgba(255, 255, 255, 0.15)",
+		backgroundColor: "#2D1B2F",
 		borderRadius: 20,
-		borderWidth: 1,
-		borderColor: "rgba(255, 255, 255, 0.50)",
 	},
 	googleIcon: {
 		width: 30,
@@ -222,19 +277,6 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: "rgba(255, 255, 255, 0.50)",
 	},
-	emailLabel: {
-		width: 106,
-		height: 21,
-		left: 77,
-		top: 501, // 481 (box top) + 20 padding
-		position: "absolute",
-		textAlign: "center", // inherited from HTML but might need 'left' depending on preference
-		color: "white",
-		fontSize: 16,
-		fontFamily: "Inter",
-		fontWeight: "400",
-		lineHeight: 22.4,
-	},
 	inputBoxPassword: {
 		width: 310,
 		height: 62,
@@ -245,18 +287,6 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		borderWidth: 1,
 		borderColor: "rgba(255, 255, 255, 0.50)",
-	},
-	passwordLabel: {
-		width: 106,
-		height: 21,
-		left: 77,
-		top: 572,
-		position: "absolute",
-		color: "white",
-		fontSize: 16,
-		fontFamily: "Inter",
-		fontWeight: "400",
-		lineHeight: 22.4,
 	},
 	signupBtnBackground: {
 		width: 310,
@@ -278,6 +308,12 @@ const styles = StyleSheet.create({
 		lineHeight: 22.4,
 		letterSpacing: 1.6,
         top: 20, // Center text vertically in the button (67 height - 22.4 lineHeight) / 2
+	},
+	textInput: {
+		fontSize: 16,
+		paddingleft: 10,
+		backgroundColor: 'transparent',
+		borderWidth: 0,
 	},
 });
 

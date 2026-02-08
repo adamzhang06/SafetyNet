@@ -24,7 +24,7 @@ const BottomNavBar = () => {
       </TouchableOpacity>
       
       {/* Profile Icon */}
-      <TouchableOpacity style={styles.navItem}>
+      <TouchableOpacity style={styles.navItem} onPress={() => router.push('../SobrietyTests/ReactionTest')}>
         <Image source={{ uri: 'https://img.icons8.com/ios-filled/50/ffffff/settings.png' }} style={styles.icon} />
       </TouchableOpacity>
     </View>
