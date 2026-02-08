@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUser } from './context/UserContext';
 import { View, StyleSheet, StatusBar, Dimensions, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TopNavbar from './components/TopNavBar';
@@ -13,8 +14,10 @@ const MainLayout = ({ children }) => {
 
   const handleMenuPress = () => setMenuOpen(true);
   const handleCloseMenu = () => setMenuOpen(false);
-  const handleLeaveGroup = () => {
+  const { leaveGroup } = useUser ? useUser() : { leaveGroup: async () => {} };
+  const handleLeaveGroup = async () => {
     setMenuOpen(false);
+    if (leaveGroup) await leaveGroup();
     router.replace('/screens/Home/HomeScreen');
   };
 

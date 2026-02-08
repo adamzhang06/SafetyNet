@@ -1,5 +1,8 @@
-<<<<<<< HEAD
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { useUser } from '../../context/UserContext';
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
+import MainLayout from '../../MainLayout';
 import {
   StyleSheet,
   View,
@@ -7,102 +10,132 @@ import {
   TextInput,
   TouchableOpacity,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const GroupItem = ({ name }) => (
-  <View style={styles.groupCard}>
-    <View style={styles.groupInfo}>
-      <View style={styles.iconCircle}>
-        <View style={styles.placeholderIcon} />
-      </View>
-      <Text style={styles.groupName} numberOfLines={1}>{name}</Text>
-    </View>
-    <TouchableOpacity style={styles.addButton}>
-      <Text style={styles.plusSymbol}>+</Text>
+const EXPO_PUBLIC_API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+
+const GroupItem = ({ name, memberCount, selected, onPress }) => (
+    <TouchableOpacity
+        style={[styles.groupCard, selected && styles.groupCardSelected]}
+        activeOpacity={0.85}
+        onPress={onPress}
+    >
+        <View style={styles.groupInfo}>
+            <Text style={styles.groupName} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginLeft: 6 }}>({memberCount} members)</Text>
+        </View>
+        <View style={styles.addButton}>
+            <Text style={styles.plusSymbol}>+</Text>
+        </View>
     </TouchableOpacity>
-  </View>
 );
 
+// Removed old random group names. All group data now comes from MongoDB API.
+
 const JoinGroupScreen = () => {
-  return (
-    <View style={styles.container}>
-=======
-                
-                
-        import React from 'react';
-        import { 
-        StyleSheet, 
-        View, 
-        Text, 
-        TextInput, 
-        TouchableOpacity, 
-        SafeAreaView, 
-        Dimensions 
-        } from 'react-native';
-        import { LinearGradient } from 'expo-linear-gradient';
+    const [search, setSearch] = useState("");
+    const [selectedGroup, setSelectedGroup] = useState(null);
+    const [groups, setGroups] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+    const { setGroupName, leaveGroup, groupId } = useUser ? useUser() : { setGroupName: () => {}, leaveGroup: async () => {}, groupId: null };
 
-        const { width } = Dimensions.get('window');
+    useEffect(() => {
+        setLoading(true);
+        fetch(`${EXPO_PUBLIC_API_URL}/groups/list`)
+            .then(res => res.json())
+            .then(data => {
+                setGroups(Array.isArray(data.groups) ? data.groups : []);
+            })
+            .catch(() => setGroups([]))
+            .finally(() => setLoading(false));
+    }, []);
 
-        const GroupItem = ({ name }) => (
-        <View style={styles.groupCard}>
-            <View style={styles.groupInfo}>
-            <View style={styles.iconCircle}>
-                {/* Replace with your specific SVG/Icon component */}
-                <View style={styles.placeholderIcon} />
-            </View>
-            <Text style={styles.groupName} numberOfLines={1}>{name}</Text>
-            </View>
-            <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.plusSymbol}>+</Text>
-            </TouchableOpacity>
-        </View>
-        );
+    const filteredGroups = groups.filter(g =>
+        g.code.toLowerCase().includes(search.toLowerCase())
+    );
 
-        const JoinGroupScreen = () => {
-        return (
-            <View style={styles.container}>
->>>>>>> 8fdfda3e14e347aa06d08f4cc1048a2eb7bc404c
-            {/* Background Orbs */}
-            <View style={[styles.orb, styles.orbLarge]} />
-            <View style={[styles.orb, styles.orbGlass]} />
+    return (
+        <MainLayout>
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()} accessible={false}>
+                <View style={styles.container}>
+                    {/* Background Orbs */}
+                    <View style={[styles.orb, styles.orbLarge]} />
+                    <View style={[styles.orb, styles.orbGlass]} />
 
-            <SafeAreaView style={styles.content}>
-                <View style={styles.header}>
-                <Text style={styles.title}>Join a Group</Text>
+                    <SafeAreaView style={[styles.content, {paddingHorizontal: 24, marginTop: 20}]}> 
+                        <View style={styles.header}>
+                            <Text style={styles.title}>Join a Group</Text>
+                        </View>
+
+                        {/* Search Bar */}
+                        <View style={styles.searchContainer}>
+                            <View style={styles.searchIcon} />
+                            <TextInput 
+                                style={styles.searchInput}
+                                placeholder="Search Groups"
+                                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                                value={search}
+                                onChangeText={setSearch}
+                            />
+                        </View>
+
+                        {/* Group Results Container */}
+                                                <View style={styles.resultsContainer}>
+                                                    <SafeAreaView style={{flex: 1}}>
+                                                        <ScrollView
+                                                            contentContainerStyle={{paddingBottom: 24}}
+                                                            showsVerticalScrollIndicator={true}
+                                                            indicatorStyle="white"
+                                                        >
+                                                            {loading ? (
+                                                                <Text style={{ color: 'white', textAlign: 'center', marginTop: 16 }}>Loading groups...</Text>
+                                                            ) : filteredGroups.length > 0 ? (
+                                                                filteredGroups.map((group) => (
+                                                                    <GroupItem
+                                                                        key={group.code}
+                                                                        name={group.code}
+                                                                        memberCount={group.member_count}
+                                                                        selected={selectedGroup === group.code}
+                                                                        onPress={() => setSelectedGroup(group.code)}
+                                                                    />
+                                                                ))
+                                                            ) : (
+                                                                <Text style={{ color: 'white', textAlign: 'center', marginTop: 16 }}>No groups found.</Text>
+                                                            )}
+                                                        </ScrollView>
+                                                    </SafeAreaView>
+                                                </View>
+
+                        {/* Join Button */}
+                        <TouchableOpacity
+                            style={styles.joinButtonWrapper}
+                            disabled={!selectedGroup}
+                            onPress={async () => {
+                                if (selectedGroup) {
+                                    if (groupId && leaveGroup) {
+                                        await leaveGroup();
+                                    }
+                                    if (setGroupName) setGroupName(selectedGroup);
+                                    router.push('/screens/Dashboard/Dashboard');
+                                }
+                            }}
+                        >
+                            <LinearGradient
+                                colors={['#BE5C5C', '#6E1F30']}
+                                style={styles.joinButton}
+                            >
+                                <Text style={[styles.joinButtonText, { opacity: selectedGroup ? 1 : 0.5 }]}>Join Group</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </SafeAreaView>
                 </View>
-
-                {/* Search Bar */}
-                <View style={styles.searchContainer}>
-                <View style={styles.searchIcon} />
-                <TextInput 
-                    style={styles.searchInput}
-                    placeholder="Search Groups"
-                    placeholderTextColor="rgba(255, 255, 255, 0.6)"
-                />
-                </View>
-
-                <Text style={styles.sectionLabel}>Suggested ✨</Text>
-
-                <View style={styles.listContainer}>
-                <GroupItem name="Responsibly Drinking Baddies" />
-                <GroupItem name="Harry’s Loyal Customers" />
-                <GroupItem name="Roomies" />
-                </View>
-
-                {/* Join Button */}
-                <TouchableOpacity style={styles.joinButtonWrapper}>
-                <LinearGradient
-                    colors={['#BE5C5C', '#6E1F30']}
-                    style={styles.joinButton}
-                >
-                    <Text style={styles.joinButtonText}>Join Group</Text>
-                </LinearGradient>
-                </TouchableOpacity>
-            </SafeAreaView>
-            </View>
-        );
-        };
+            </TouchableWithoutFeedback>
+        </MainLayout>
+    );
+};
 
         const styles = StyleSheet.create({
         container: {
@@ -133,8 +166,8 @@ const JoinGroupScreen = () => {
             paddingHorizontal: 30,
         },
         header: {
-            marginTop: 40,
-            marginBottom: 30,
+            marginTop: 10,
+            marginBottom: 18,
             alignItems: 'center',
         },
         title: {
@@ -146,13 +179,15 @@ const JoinGroupScreen = () => {
         searchContainer: {
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            backgroundColor: 'rgba(40, 20, 30, 0.38)', // Darker, slightly purple-brown
             borderRadius: 20,
             borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            borderColor: 'rgba(255, 255, 255, 0.22)',
             height: 45,
             paddingHorizontal: 15,
             marginBottom: 25,
+            width: '85%', // Reduce width
+            alignSelf: 'center',
         },
         searchInput: {
             flex: 1,
@@ -176,6 +211,23 @@ const JoinGroupScreen = () => {
         listContainer: {
             gap: 15,
         },
+        resultsContainer: {
+            marginTop: 10,
+            marginBottom: 20,
+            gap: 15,
+            alignItems: 'center',
+            backgroundColor: 'rgba(60, 30, 40, 0.22)', // More opaque, slightly reddish
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.22)',
+            paddingVertical: 16,
+            paddingHorizontal: 8,
+            width: '90%',
+            alignSelf: 'center',
+            flex: 1,
+            minHeight: 220,
+            maxHeight: 340,
+        },
         groupCard: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -186,33 +238,27 @@ const JoinGroupScreen = () => {
             borderColor: 'rgba(255, 255, 255, 0.3)',
             paddingHorizontal: 15,
             height: 60,
+            width: '85%', // Reduce width
+            alignSelf: 'center',
+            marginVertical: 10,
+        },
+        groupCardSelected: {
+            backgroundColor: 'rgba(190, 92, 92, 0.28)',
+            borderColor: '#BE5C5C',
         },
         groupInfo: {
             flexDirection: 'row',
             alignItems: 'center',
             flex: 1,
         },
-        iconCircle: {
-            width: 38,
-            height: 38,
-            borderRadius: 19,
-            borderWidth: 1,
-            borderColor: 'white',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginRight: 12,
-        },
-        placeholderIcon: {
-            width: 20,
-            height: 18,
-            backgroundColor: 'white',
-            borderRadius: 2,
-        },
+        // iconCircle and placeholderIcon styles removed
         groupName: {
-            color: 'white',
-            fontSize: 12,
-            fontWeight: '300',
+            color: 'rgba(255,255,255,0.95)',
+            fontSize: 14,
+            fontWeight: '500',
             flex: 1,
+            marginRight: 8,
+            overflow: 'hidden',
         },
         addButton: {
             width: 30,
@@ -232,7 +278,7 @@ const JoinGroupScreen = () => {
         joinButtonWrapper: {
             marginTop: 40,
             alignSelf: 'center',
-            width: 196,
+            width: 160, // Reduce width
             height: 57,
         },
         joinButton: {

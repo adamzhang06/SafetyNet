@@ -9,6 +9,29 @@ from app.models import GroupCreate, GroupJoin, GroupNotify
 
 router = APIRouter(prefix="/groups", tags=["groups"])
 
+@router.get("/list")
+async def list_groups(db=Depends(get_db)):
+    """Return all group codes and member counts."""
+    groups = await db.groups.find().to_list(length=100)
+    result = [
+        {
+            "code": g.get("code", ""),
+            "member_count": len(g.get("user_list", []))
+        }
+        for g in groups
+    ]
+    return {"groups": result}
+import random
+import string
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.db import get_db
+from app.models import GroupCreate, GroupJoin, GroupNotify
+
+router = APIRouter(prefix="/groups", tags=["groups"])
+
 
 def _generate_code() -> str:
     return "".join(random.choices(string.digits, k=6))

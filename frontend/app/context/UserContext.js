@@ -28,7 +28,12 @@ export const UserProvider = ({ children }) => {
   const [groupId, setGroupId] = useState(null);
   const [groupCode, setGroupCode] = useState('');
   const [groupMembers, setGroupMembers] = useState([]);
+  const [groupName, setGroupName] = useState("");
   const [reactionLatencies, setReactionLatencies] = useState(null);
+
+  React.useEffect(() => {
+    if (!groupId && groupName) setGroupName("");
+  }, [groupId]);
 
   const calculateBAC = useCallback(() => {
     const w = parseFloat(weight, 10);
@@ -100,6 +105,29 @@ export const UserProvider = ({ children }) => {
     }
   }, [groupId]);
 
+  const leaveGroup = useCallback(async () => {
+    if (!groupId || !userId) return;
+    try {
+      const res = await fetch(`${API_BASE}/groups/leave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group_id: groupId, user_id: userId }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Could not leave group');
+      }
+      setGroupId(null);
+      setGroupCode('');
+      setGroupMembers([]);
+      setGroupName('');
+      // Also clear groupName in case setGroupName is used elsewhere
+      if (typeof setGroupName === 'function') setGroupName('');
+    } catch (e) {
+      throw e;
+    }
+  }, [groupId, userId, setGroupName]);
+
   const addDrink = useCallback((alcohol_grams = 14) => {
     setDrinkLog((prev) => [...prev, { alcohol_grams, timestamp: Date.now() }]);
   }, []);
@@ -151,9 +179,12 @@ export const UserProvider = ({ children }) => {
         createGroup,
         joinGroup,
         refreshGroupMembers,
+        leaveGroup,
         reactionLatencies,
         setReactionLatencies,
         apiBase: API_BASE,
+        groupName,
+        setGroupName,
       }}
     >
       {children}

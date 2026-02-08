@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useUser } from '../context/UserContext';
 
 const TopNavbar = ({ imageUri, onNotificationPress }) => {
-  const { firstName, photoUri } = useUser();
+  const { firstName, photoUri, groupName, leaveGroup } = useUser();
   const WomanSilhouette = require('../assets/woman_silhouette.png');
   let displayUri = photoUri;
   if (!displayUri) {
@@ -22,12 +22,15 @@ const TopNavbar = ({ imageUri, onNotificationPress }) => {
         </View>
         <Text style={styles.userName}>{displayName}</Text>
       </View>
-      <TouchableOpacity onPress={onNotificationPress} style={styles.notificationButton}>
-         <Image 
-            source={{ uri: 'https://img.icons8.com/ios-filled/50/ffffff/menu--v1.png' }} 
-            style={styles.iconImage}
-         />
-      </TouchableOpacity>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text style={styles.groupName} numberOfLines={1} ellipsizeMode="tail">{groupName ? groupName : 'Your Group'}</Text>
+        <TouchableOpacity onPress={onNotificationPress} style={styles.notificationButton}>
+           <Image 
+              source={{ uri: 'https://img.icons8.com/ios-filled/50/ffffff/menu--v1.png' }} 
+              style={styles.iconImage}
+           />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -75,6 +78,16 @@ const styles = StyleSheet.create({
     height: 24,
     tintColor: 'white',
   },
+  groupName: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 4,
+    maxWidth: 80,
+    textAlign: 'center',
+    overflow: 'hidden',
+  },
+  // leaveButton and leaveButtonText styles removed
 });
 
 export default TopNavbar;

@@ -41,6 +41,7 @@ const Dashboard = () => {
     calculateBAC: contextCalculateBAC,
     reactionLatencies,
     apiBase,
+    groupName,
   } = useUser();
   const [bac, setBac] = useState(0);
   const [recommendation, setRecommendation] = useState('');
@@ -206,6 +207,7 @@ const Dashboard = () => {
     <MainLayout>
       <View style={styles.container}>
         <Text style={styles.headerLabel}>Your Blood Alcohol Content</Text>
+        {/* Group name now shown in TopNavBar */}
         <View style={styles.gaugeContainer}>
           <BACRing value={bac} size={240} />
           {loading && (
