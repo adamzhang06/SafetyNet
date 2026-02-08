@@ -36,7 +36,7 @@ const CreateGroupScreen = () => {
 
       <SafeAreaView style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Create Your Group</Text>
+          <Text style={styles.title}>Create a Group</Text>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -63,17 +63,7 @@ const CreateGroupScreen = () => {
               placeholder="Name Your Group"
               placeholderTextColor="rgba(255,255,255,0.5)"
             />
-            
-            <TouchableOpacity style={styles.formInput}>
-              <Text style={styles.formInputText}>Assign Your Designated Driver</Text>
-              <View style={styles.dropdownArrow} />
-            </TouchableOpacity>
-
-            <TextInput 
-              style={styles.formInput}
-              placeholder="Enter Your Primary Contacts"
-              placeholderTextColor="rgba(255,255,255,0.5)"
-            />
+          
           </View>
         </ScrollView>
 
@@ -83,7 +73,7 @@ const CreateGroupScreen = () => {
             colors={['#BE5C5C', '#6E1F30']}
             style={styles.mainButton}
           >
-            <Text style={styles.mainButtonText}>Create Group</Text>
+            <Text style={styles.mainButtonText}>Create</Text>
           </LinearGradient>
         </TouchableOpacity>
       </SafeAreaView>
@@ -218,18 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '200',
   },
-  dropdownArrow: {
-    position: 'absolute',
-    right: 20,
-    width: 10,
-    height: 6,
-    borderLeftWidth: 5,
-    borderRightWidth: 5,
-    borderTopWidth: 6,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: 'white',
-  },
+
   mainButtonContainer: {
     position: 'absolute',
     bottom: 40,
