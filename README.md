@@ -19,9 +19,11 @@ The app notifies users when they are approaching unsafe limits and promotes grou
 
 ## How we built it
 
-We began with a desk review of existing BAC tracking apps, smart breathalyzers, and standard drink measurements. Next, we examined edge cases and ethical concerns, including connectivity failures, inaccurate drink tracking, privacy and data sharing risks, and accessibility for diverse student populations.
+We began with a **desk review** of existing BAC tracking apps, smart breathalyzers, and standard drink measurement frameworks to understand the current landscape and identify gaps. We then evaluated key **edge cases and ethical risks**, including connectivity failures in real-world environments, inaccurate drink tracking, privacy and data-sharing concerns, and accessibility barriers for diverse student populations.
 
-With research compiled, we moved to ideation and iteration, sketching on whiteboards and creating wireframes in Figma. Once the framework was established, we set up a MongoDB database to store user profiles, including ID, age, sex, and weight. Front-end development followed using React Native and Expo, with Gemini and Claude assisting in generating code from our wireframes. Finally, we built the back end, connecting Python FastAPI and MongoDB to the app and integrating the Gemini API and Snowflake for additional functionality.
+With our research synthesized, we moved into **rapid ideation and iteration**, sketching concepts on whiteboards and translating them into wireframes in Figma to define user flows and core interactions. Once the product framework was clear, we implemented a **MongoDB database** to store user profiles and essential attributes such as ID, age, sex, and weight.
+
+From there, we developed the **front end** using React Native and Expo, leveraging Gemini and Claude to accelerate implementation by generating code directly from our wireframes. Finally, we built the **back end** with Python FastAPI, connected it to MongoDB, and integrated the Gemini API to support additional AI-powered features and data processing.
 
 ## Challenges we ran into
 
