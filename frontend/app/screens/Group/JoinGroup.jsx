@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useUser } from '../../context/UserContext';
-import { Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
 import MainLayout from '../../MainLayout';
 import {
   StyleSheet,
@@ -40,12 +40,12 @@ const JoinGroupScreen = () => {
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { setGroupName, leaveGroup, groupId } = useUser ? useUser() : { setGroupName: () => {}, leaveGroup: async () => {}, groupId: null };
+    const { userId, joinGroup, leaveGroup, groupId } = useUser();
 
     useEffect(() => {
         setLoading(true);
         fetch(`${EXPO_PUBLIC_API_URL}/groups/list`)
-            .then(res => res.json())
+            .then(res => res.ok ? res.json() : Promise.reject(new Error(res.statusText)))
             .then(data => {
                 setGroups(Array.isArray(data.groups) ? data.groups : []);
             })
@@ -96,7 +96,7 @@ const JoinGroupScreen = () => {
                                                                 filteredGroups.map((group) => (
                                                                     <GroupItem
                                                                         key={group.code}
-                                                                        name={group.code}
+                                                                        name={group.name || group.code}
                                                                         memberCount={group.member_count}
                                                                         selected={selectedGroup === group.code}
                                                                         onPress={() => setSelectedGroup(group.code)}
@@ -114,12 +114,13 @@ const JoinGroupScreen = () => {
                             style={styles.joinButtonWrapper}
                             disabled={!selectedGroup}
                             onPress={async () => {
-                                if (selectedGroup) {
-                                    if (groupId && leaveGroup) {
-                                        await leaveGroup();
-                                    }
-                                    if (setGroupName) setGroupName(selectedGroup);
-                                    router.push('/screens/Dashboard/Dashboard');
+                                if (!selectedGroup || !joinGroup) return;
+                                try {
+                                    if (groupId && leaveGroup) await leaveGroup();
+                                    await joinGroup(selectedGroup);
+                                    router.push('/dashboard');
+                                } catch (e) {
+                                    Alert.alert('Could not join', e?.message || 'Please try again.');
                                 }
                             }}
                         >
