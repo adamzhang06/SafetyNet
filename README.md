@@ -1,19 +1,19 @@
 
-# Bar Babes — Your Party's AI Safety Net
+# BarBabes — Your Party's AI Safety Net
 
 ## Pitch
 
-Bar Babes is your party's AI safety net. Combining NFC tracking, Gemini sobriety tests, and more, the app assists in responsible drinking, combats hangxiety, and empowers women to enjoy college safely.
+BarBabes is your party's AI safety net. Combining NFC tracking, Gemini sobriety tests, and more, the app assists in responsible drinking, combats hangxiety, and empowers women to enjoy college safely.
 
 ## Inspiration
 
 Situational anxiety should not tamper with a night out. Young women should not have to battle thoughts like "can I get home safely" or "am I surrounded by safe people" on a regular college outing. These thoughts aren't just paranoia; they stem from heightened vulnerabilities which amplify the real and ongoing risk of sexual assault and misconduct that all women face today.
 
-We realized that while emergency apps and protocols exist to prevent such, none actually directly address the risks before they escalate. This is personal for us; we’ve seen loved ones struggle with medically-induced alcohol intolerance and the trauma of assault. That's why we created Bar Babes—it acts as a non-incriminating hand, automating safety checks and mental math so friend groups can look out for each other without the noise.
+We realized that while emergency apps and protocols exist to prevent such, none actually directly address the risks before they escalate. This is personal for us; we’ve seen loved ones struggle with medically-induced alcohol intolerance and the trauma of assault. That's why we created BarBabes—it acts as a non-incriminating hand, automating safety checks and mental math so friend groups can look out for each other without the noise.
 
 ## What it does
 
-Bar Babes’ mobile app uses NFC-enabled alcohol consumption tracking, ideally implemented through tags embedded in drink coasters provided by bars. Each time a user scans a drink, the app instantly logs it and updates their cumulative alcohol intake. This FastAPI data feeds directly into Bar Babes’ BAC estimation, which calculates the user’s current blood alcohol concentration based on their profile biometric data, including height, weight, age, and predicted tolerance.
+BarBabes’ mobile app uses NFC-enabled alcohol consumption tracking, ideally implemented through tags embedded in drink coasters provided by bars. Each time a user scans a drink, the app instantly logs it and updates their cumulative alcohol intake. This FastAPI data feeds directly into BarBabes’ BAC estimation, which calculates the user’s current blood alcohol concentration based on their profile biometric data, including height, weight, age, and predicted tolerance.
 
 The app notifies users when they are approaching unsafe limits and promotes group accountability through Gemini-powered sobriety checks, designated driver coordination, emergency contacts, and automated alerts if a friend may be at risk.
 
@@ -47,8 +47,8 @@ With research compiled, we moved to ideation and iteration, sketching on whitebo
 
 ## What we learned
 
-Building Bar Babes taught us how to bridge the gap between digital safety and physical social environments. We deepened our understanding of full-stack development by implementing physiological modeling through the Widmark formula to estimate Blood Alcohol Content (BAC). Integrating hardware like NFC tags for drink validation and utilizing Google Gemini 2.0 Flash for AI-powered sobriety assessments taught us about the process of real-time data handling and edge case management. We learned the importance of accessible UI/UX design for impaired users, using high-contrast color palettes and large touch areas to make sure the app remains functional in high-stress or low-visibility situations. Through the use of MongoDB for live data, we also gained experience in creating scalable, data-driven safety solutions.
+Building BarBabes taught us how to bridge the gap between digital safety and physical social environments. We deepened our understanding of full-stack development by implementing physiological modeling through the Widmark formula to estimate Blood Alcohol Content (BAC). Integrating hardware like NFC tags for drink validation and utilizing Google Gemini 2.0 Flash for AI-powered sobriety assessments taught us about the process of real-time data handling and edge case management. We learned the importance of accessible UI/UX design for impaired users, using high-contrast color palettes and large touch areas to make sure the app remains functional in high-stress or low-visibility situations. Through the use of MongoDB for live data, we also gained experience in creating scalable, data-driven safety solutions.
 
-## What's next for Bar Babes
+## What's next for BarBabes
 
-Bar Babes aims to expand the hardware, potentially integrating smart breathalyzer technology for more accurate BAC tracking. We also aim to enhance the social experience with features such as sharable summaries of highlights throughout the night, fun group tasks, and a sobriety group leaderboard. Additionally, we plan to establish credible enterprise partnerships with college bars to integrate Bar Babes into their responsible service initiatives.
+BarBabes aims to expand the hardware, potentially integrating smart breathalyzer technology for more accurate BAC tracking. We also aim to enhance the social experience with features such as sharable summaries of highlights throughout the night, fun group tasks, and a sobriety group leaderboard. Additionally, we plan to establish credible enterprise partnerships with college bars to integrate BarBabes into their responsible service initiatives.
