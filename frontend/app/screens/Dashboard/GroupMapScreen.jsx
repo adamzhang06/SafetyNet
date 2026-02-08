@@ -20,7 +20,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Include Designated Driver at the top, then alliterative group members
 const GROUP_MEMBER_NAMES = [
-  'Designated Driver',
+  'Designated Diana',
   'Martini Mandy',
   'Cosmo Cassidy',
   'Bubbly Bonnie',
@@ -60,6 +60,12 @@ function PersonDot({ person, onPress }) {
       ]}
     >
       <Text style={styles.dotInitials}>{person.initials}</Text>
+      {/* Show car icon if Designated Diana and BAC is 0.00, overlapping bottom edge */}
+      {person.bac === 0 && (
+        <View style={styles.carIconContainer}>
+          <Text style={styles.carIcon}>🚗</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -77,10 +83,21 @@ function SheetHandle({ onPress }) {
 function PersonRow({ person, onBellPress }) {
   return (
     <View style={styles.personRow}>
-      <View style={[styles.personAvatar, { backgroundColor: person.color }]}>
-        <Text style={styles.personAvatarText}>{person.initials}</Text>
+      {/* Avatar stays neutral, must be a <Text> for initials and car icon */}
+      <View style={[styles.personAvatar, { backgroundColor: '#333', position: 'relative' }]}> 
+        <Text style={styles.personAvatarText}>
+          {person.initials}
+          {/* Car icon overlaps bottom edge of avatar if Designated Diana and BAC is 0.00 */}
+          {person.name === 'Designated Diana' && person.bac === 0 && (
+            <Text style={styles.carIconInline}>🚗</Text>
+          )}
+        </Text>
       </View>
-      <Text style={styles.personName} numberOfLines={1}>{person.name}</Text>
+      <Text
+        style={[styles.personNameBg, { backgroundColor: person.color }]} numberOfLines={1}
+      >
+        <Text style={styles.personName}>{person.name}</Text>
+      </Text>
       <View style={styles.personActions}>
         <TouchableOpacity style={styles.actionIcon}>
           <Text style={styles.actionIconText}>💬</Text>
@@ -157,11 +174,14 @@ export default function GroupMapScreen() {
 
         {/* Map area: title, location, pin, dots */}
         <View style={styles.mapArea}>
-          <Text style={styles.title}>Your Group</Text>
-          <Text style={styles.location}>{CENTER_LOCATION}</Text>
-          <View style={styles.pinWrapper}>
-            <Text style={styles.pinIcon}>📍</Text>
-          </View>
+          <Text style={[styles.title, { marginTop: 0, marginBottom: 0 }]}>Your Group</Text>
+          <Text style={[styles.location, { marginTop: 0, marginBottom: 4 }]}>{CENTER_LOCATION}</Text>
+          {/* Harry's background image */}
+          <Image
+            source={require('../../assets/harrys.png')}
+            style={styles.harrysBg}
+            resizeMode="cover"
+          />
           {/* Dots – each person as their own positioned object */}
           <View style={styles.dotsContainer} pointerEvents="box-none">
             {MOCK_PEOPLE.map((person) => (
@@ -283,20 +303,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 26,
     fontWeight: '700',
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 0,
   },
   location: {
     color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
     textAlign: 'center',
     paddingHorizontal: 24,
-    marginBottom: 12,
-  },
-  pinWrapper: {
-    marginBottom: 16,
-  },
-  pinIcon: {
-    fontSize: 32,
+    marginTop: 0,
+    marginBottom: 4,
   },
   dotsContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -319,6 +335,51 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  carIcon: {
+    fontSize: 18,
+    textAlign: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  carIconContainer: {
+    position: 'absolute',
+    left: '50%',
+    bottom: -12,
+    transform: [{ translateX: -12 }],
+    zIndex: 10,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carIconContainerProfile: {
+    position: 'absolute',
+    left: '50%',
+    bottom: -10,
+    transform: [{ translateX: -12 }],
+    zIndex: 10,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carIconInline: {
+    fontSize: 18,
+    position: 'absolute',
+    left: '50%',
+    bottom: -10,
+    transform: [{ translateX: -12 }],
+    zIndex: 10,
+    width: 24,
+    height: 24,
+    textAlign: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   sheet: {
     position: 'absolute',
@@ -367,8 +428,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  personNameBg: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginRight: 8,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff', // Needed for <Text>
+    overflow: 'hidden',
+  },
   personName: {
-    flex: 1,
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
@@ -376,6 +447,10 @@ const styles = StyleSheet.create({
   personActions: {
     flexDirection: 'row',
     gap: 12,
+    marginLeft: 'auto', // Push icons to the right
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 110, // Ensures consistent alignment
   },
   actionIcon: {
     padding: 6,
@@ -399,5 +474,16 @@ const styles = StyleSheet.create({
   },
   navIconLabel: {
     fontSize: 24,
+  },
+  harrysBg: {
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+    opacity: 0.65,
   },
 });

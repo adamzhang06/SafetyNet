@@ -9,7 +9,7 @@ function bacToColor(bac) {
 }
 
 export const contactData = [
-  { id: '1', name: 'Designated Driver', initials: 'DD', bac: 0.00, statusColor: bacToColor(0.00) },
+  { id: '1', name: 'Designated Diana', initials: 'DD', bac: 0.00, statusColor: bacToColor(0.00) },
   { id: '2', name: 'Primary Contact 1', initials: 'PC', statusColor: 'transparent' },
   { id: '3', name: 'Primary Contact 2', initials: 'PC', statusColor: 'transparent' },
   { id: '4', name: 'Martini Mandy', initials: 'MM', bac: 0.04, statusColor: bacToColor(0.04) },
