@@ -29,12 +29,12 @@ const HomeScreen = () => {
           <ActionButton 
             text="Create Group" 
             iconUri="https://img.icons8.com/ios-glyphs/30/ffffff/plus-math.png"
-            onPress={() => router.push('/group/create')}
+            onPress={() => router.push('/Group/CreateGroup')}
           />
           <ActionButton 
             text="Join Group" 
             iconUri="https://img.icons8.com/ios-filled/50/ffffff/conference-call.png"
-            onPress={() => router.push('/group/join')}
+            onPress={() => router.push('/Group/JoinGroup')}
           />
         </View>
       </View>
