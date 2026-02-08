@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -24,6 +24,19 @@ class UserProfile(BaseModel):
     number: str
     primary_contact: Optional[str] = None
     is_cut_off: bool = False
+    height_cm: Optional[float] = Field(None, ge=0)
+    tolerance: Optional[int] = Field(None, ge=1, le=10)
+
+
+class UserProfileUpdate(BaseModel):
+    """Partial update: all fields optional."""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = Field(None, ge=18)
+    weight_kg: Optional[float] = Field(None, gt=0)
+    sex: Optional[BiologicalSex] = None
+    primary_contact: Optional[str] = None
+    is_cut_off: Optional[bool] = None
     height_cm: Optional[float] = Field(None, ge=0)
     tolerance: Optional[int] = Field(None, ge=1, le=10)
 
