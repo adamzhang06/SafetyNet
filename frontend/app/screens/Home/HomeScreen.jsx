@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import MainLayout from '../../MainLayout';
 import { useRouter } from 'expo-router';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../../lib/context/UserContext';
 
 const { width } = Dimensions.get('window');
 

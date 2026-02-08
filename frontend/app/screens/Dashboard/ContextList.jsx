@@ -6,7 +6,7 @@ import BottomNavBar from '../../components/BottomNavBar';
 const { width } = Dimensions.get('window');
 
 // Import shared contact data
-import { contactData } from '../../data/contacts';
+import { contactData } from '../../../lib/data/contacts';
 
 export default function ContactListScreen() {
   // Sort so Primary Contact 1 and 2 are always at the top

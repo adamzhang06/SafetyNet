@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../../lib/context/UserContext';
 
 const TopNavbar = ({ imageUri, onNotificationPress }) => {
   const { firstName, photoUri } = useUser();

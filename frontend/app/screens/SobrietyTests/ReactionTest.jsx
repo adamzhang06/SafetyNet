@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import MainLayout from '../../MainLayout';
 import BottomNavBar from '../../components/BottomNavBar';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../../lib/context/UserContext';
 
 const { width } = Dimensions.get('window');
 

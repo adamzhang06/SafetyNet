@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     mongodb_uri: str = ""
     google_gemini_api_key: str = ""
+    firebase_credentials_path: str = ""
     snowflake_account: str = ""
     snowflake_user: str = ""
     snowflake_password: str = ""

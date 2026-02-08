@@ -1,5 +1,5 @@
 // Profile photo button with silhouette logic
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../../lib/context/UserContext';
 import React, { useState } from 'react';
 import WomanSilhouette from '../../assets/woman_silhouette.png';
 import WomanSilhouette2 from '../../assets/woman_silhouette2.png';

@@ -14,7 +14,7 @@ import MainLayout from '../../MainLayout';
 import BottomNavBar from '../../components/BottomNavBar';
 
 // Import shared contact data
-import { contactData } from '../../data/contacts';
+import { contactData } from '../../../lib/data/contacts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

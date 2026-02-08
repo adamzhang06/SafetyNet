@@ -5,7 +5,7 @@ import httpx
 from fastapi import FastAPI
 
 from app.db import create_client, get_db
-from app.routers import bac, drinks, sobriety, users
+from app.routers import auth, bac, drinks, sobriety, users
 from app.services.indexes import create_indexes
 
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ app.include_router(drinks.router)
 app.include_router(bac.router)
 app.include_router(sobriety.router)
 app.include_router(users.router)
+app.include_router(auth.router)
 
 
 @app.get("/")

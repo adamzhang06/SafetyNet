@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, Image, StyleSheet, Dimensions, Pressable, TextInput, Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions, Pressable, TextInput, Alert, Keyboard, TouchableWithoutFeedback, ActivityIndicator } from "react-native";
 import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../../lib/firebase";
 
 const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -13,13 +15,17 @@ const Screen = () => {
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGoogleSignIn = () => {
     // TODO: Integrate Google sign-in logic here
     Alert.alert("Google Sign-In", "Google sign-in pressed!");
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
+    if (isSubmitting) return;
+    setAuthError("");
     let valid = true;
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address.");
@@ -34,7 +40,25 @@ const Screen = () => {
       setPasswordError("");
     }
     if (valid) {
-      router.push('/screens/User/Profile');
+      setIsSubmitting(true);
+      const normalizedEmail = email.trim();
+      try {
+        await signInWithEmailAndPassword(auth, normalizedEmail, password);
+        router.push('/screens/User/Profile');
+      } catch (signInError) {
+        if (signInError?.code === "auth/user-not-found") {
+          try {
+            await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+            router.push('/screens/User/Profile');
+          } catch (createError) {
+            setAuthError(createError?.message || "Sign up failed.");
+          }
+        } else {
+          setAuthError(signInError?.message || "Sign in failed.");
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -90,12 +114,20 @@ const Screen = () => {
         {passwordError ? (
           <Text style={{ color: 'red', position: 'absolute', left: 60, top: 410, fontSize: 12, width: 270, textAlign: 'left', backgroundColor: 'transparent', paddingHorizontal: 2, lineHeight: 14 }} numberOfLines={2} ellipsizeMode="tail">{passwordError}</Text>
         ) : null}
+        {authError ? (
+          <Text style={{ color: '#FFD6D6', position: 'absolute', left: 60, top: 430, fontSize: 12, width: 270, textAlign: 'left', backgroundColor: 'transparent', paddingHorizontal: 2, lineHeight: 14 }} numberOfLines={2} ellipsizeMode="tail">{authError}</Text>
+        ) : null}
         {/* Sign Up Button */}
         <Pressable
           style={[styles.signupBtnBackground, { top: 450 }]}
           onPress={handleSignUp}
+          disabled={isSubmitting}
         >
-          <Text style={styles.signupBtnText}>SIGN UP NOW</Text>
+          {isSubmitting ? (
+            <ActivityIndicator color="#500119" />
+          ) : (
+            <Text style={styles.signupBtnText}>SIGN UP NOW</Text>
+          )}
         </Pressable>
         {/* Divider Text */}
         <View style={[styles.dividerContainer, { top: 530 }]}>
