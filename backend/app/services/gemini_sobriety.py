@@ -73,12 +73,12 @@ async def _gemini_generate(
             last_error = "Empty or blocked response"
         except httpx.HTTPStatusError as e:
             last_error = f"{e.response.status_code}: {e.response.text}"
-            if e.response.status_code in (403, 404):
+            if e.response.status_code in (403, 404, 429):
                 logger.warning(
-                    "Gemini %s for model %s (try next or check key/billing): %s",
+                    "Gemini %s for model %s (rate limit/billing or not found; trying next or using fallback): %s",
                     e.response.status_code,
                     model,
-                    e.response.text[:500] if e.response.text else "",
+                    (e.response.text or "")[:400],
                 )
                 continue
             logger.exception("Gemini API HTTP error: %s %s", e.response.status_code, e.response.text)
@@ -119,14 +119,20 @@ async def get_sobriety_assessment(
 
 
 def _build_prompt(t: SobrietyTelemetry) -> str:
+    constraint = (
+        " CRITICAL: If the user's BAC (blood alcohol content) is greater than 0.08, "
+        "you MUST recommend that they do not drive, regardless of game performance."
+    )
     return (
-        "You are a safety assistant. Based on the following sobriety test telemetry, "
+        "You are a safety assistant. Based on the following sobriety test telemetry (including BAC), "
         "return a JSON object with exactly: sobriety_score (0-100, 100 = fully sober), "
         "recommendation (short string), is_emergency (boolean). "
-        "Consider: high jitter, slow/late reactions, and many typos as signs of impairment. "
-        "Set is_emergency true only if you believe the person may be in immediate danger.\n\n"
-        f"Telemetry:\n{t.model_dump_json(indent=2)}\n\n"
-        "Respond with only valid JSON, no markdown."
+        "Consider: the user's BAC, high jitter, slow/late reactions (reaction_latencies_ms), and many typos as signs of impairment. "
+        "Set is_emergency true only if you believe the person may be in immediate danger."
+        + constraint
+        + "\n\nTelemetry:\n"
+        + t.model_dump_json(indent=2)
+        + "\n\nRespond with only valid JSON, no markdown."
     )
 
 

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import create_client
-from app.routers import bac, drinks, sobriety, users
+from app.routers import bac, groups, sobriety, users
 from app.services.indexes import create_indexes
 
 # --------------------
@@ -80,10 +80,10 @@ app.add_middleware(
 # --------------------
 # Routers
 # --------------------
-# app.include_router(drinks.router, prefix="/drinks", tags=["Drinks"])
-# app.include_router(bac.router, prefix="/bac", tags=["BAC"])
-# app.include_router(sobriety.router, prefix="/sobriety", tags=["Sobriety"])
-# app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(users.router)
+app.include_router(bac.router)
+app.include_router(sobriety.router)
+app.include_router(groups.router)
 
 # --------------------
 # Root & Health
