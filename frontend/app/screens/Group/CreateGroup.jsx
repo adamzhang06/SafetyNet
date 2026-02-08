@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -28,6 +28,9 @@ const ContactItem = ({ initials }) => (
 );
 
 const CreateGroupScreen = () => {
+  const [groupName, setGroupName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
   return (
     <View style={styles.container}>
       {/* Background Orbs for Depth */}
@@ -35,8 +38,10 @@ const CreateGroupScreen = () => {
       <View style={[styles.orb, styles.orbSmall]} />
 
       <SafeAreaView style={styles.content}>
+        {/* Header Section */}
         <View style={styles.header}>
           <Text style={styles.title}>Create a Group</Text>
+          <Text style={styles.subtitle}>Add members and name your group</Text>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -46,6 +51,8 @@ const CreateGroupScreen = () => {
               style={styles.searchInput}
               placeholder="Search Contacts"
               placeholderTextColor="rgba(255,255,255,0.6)"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
           </View>
 
@@ -58,12 +65,14 @@ const CreateGroupScreen = () => {
 
           {/* Form Section */}
           <View style={styles.inputGroup}>
+            <Text style={styles.formLabel}>Group Name</Text>
             <TextInput 
               style={styles.formInput}
               placeholder="Name Your Group"
               placeholderTextColor="rgba(255,255,255,0.5)"
+              value={groupName}
+              onChangeText={setGroupName}
             />
-          
           </View>
         </ScrollView>
 
@@ -119,6 +128,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '200',
     fontFamily: 'Inter',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '300',
+    marginTop: 8,
   },
   searchSection: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
@@ -193,6 +208,13 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginTop: 20,
   },
+  formLabel: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 10,
+    marginLeft: 5,
+  },
   formInput: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 20,
@@ -202,8 +224,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 15,
     marginBottom: 20,
-  },
-  formInputText: {
     color: 'white',
     fontSize: 14,
     fontWeight: '200',
