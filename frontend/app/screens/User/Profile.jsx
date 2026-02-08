@@ -18,7 +18,8 @@ import {
   Modal,
   Pressable,
   SafeAreaView,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Keyboard
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -105,110 +106,112 @@ function ProfileScreen() {
   const [heightIn, setHeightIn] = useState();
   const [weight, setWeight] = useState('');
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      {/* Background Blobs */}
-      <View style={styles.blobRed} />
-      <View style={styles.blobLight} />
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.contentContainer}>
-          {/* Title (Compacted) */}
-          <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', marginBottom: 24, marginTop: 16, justifyContent: 'space-between' }}>
-            <Text
-              style={[styles.titleText, { textAlign: 'left', marginLeft: 8, fontSize: 40, lineHeight: 44, maxWidth: 180 }]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              Profile
-            </Text>
-            <ProfilePhotoButton />
-          </View>
-          {/* Form */}
-          <View style={styles.formContainer}>
-            {/* Row 1: Names (Combined to save space) */}
-            <View style={styles.row}>
-              <View style={[styles.inputContainer, { flex: 0.48 }]}> 
-                <TextInput
-                  style={{ color: 'white', fontSize: 14, flex: 1, backgroundColor: 'transparent', padding: 0, margin: 0 }}
-                  value={firstName || ''}
-                  onChangeText={setFirstName}
-                  placeholder="First name"
-                  placeholderTextColor="rgba(255,255,255,0.5)"
-                  autoCapitalize="words"
-                />
-              </View>
-              <View style={[styles.inputContainer, { flex: 0.48 }]}> 
-                <TextInput
-                  style={{ color: 'white', fontSize: 14, flex: 1, backgroundColor: 'transparent', padding: 0, margin: 0 }}
-                  value={lastName}
-                  onChangeText={setLastName}
-                  placeholder="Last name"
-                  placeholderTextColor="rgba(255,255,255,0.5)"
-                  autoCapitalize="words"
-                />
-              </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        {/* Background Blobs */}
+        <View style={styles.blobRed} />
+        <View style={styles.blobLight} />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.contentContainer}>
+            {/* Title (Compacted) */}
+            <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', marginBottom: 24, marginTop: 16, justifyContent: 'space-between' }}>
+              <Text
+                style={[styles.titleText, { textAlign: 'left', marginLeft: 8, fontSize: 40, lineHeight: 44, maxWidth: 180 }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                Profile
+              </Text>
+              <ProfilePhotoButton />
             </View>
-            {/* Divider 1 */}
-            <Divider />
-            {/* Row 2: Age & Gender */}
-            <View style={styles.row}>
-              <View style={[styles.inputContainer, { flex: 0.4 }]}> 
-                <TextInput
-                  style={{ color: 'white', fontSize: 14, flex: 1, backgroundColor: 'transparent', padding: 0, margin: 0 }}
-                  placeholder="Age"
-                  placeholderTextColor="rgba(255,255,255,0.5)"
-                  keyboardType="numeric"
-                  maxLength={3}
-                  inputMode="numeric"
-                  onChangeText={text => {
-                    const numeric = text.replace(/[^0-9]/g, '');
-                    setAge(numeric);
-                  }}
-                  value={age}
-                />
-              </View>
-              <GenderDropdown containerStyle={{ flex: 0.55 }} />
-            </View>
-            {/* Row 3: Height & Weight */}
-            <View style={styles.row}>
-              {/* Height input with modal picker and label */}
-              <HeightPicker heightFt={heightFt} setHeightFt={setHeightFt} heightIn={heightIn} setHeightIn={setHeightIn} />
-              {/* Weight input styled like Gender */}
-              <View style={[styles.inputContainer, { flex: 0.55, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', position: 'relative' }]}> 
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            {/* Form */}
+            <View style={styles.formContainer}>
+              {/* Row 1: Names (Combined to save space) */}
+              <View style={styles.row}>
+                <View style={[styles.inputContainer, { flex: 0.48 }]}> 
                   <TextInput
-                    style={{ color: 'white', fontSize: 14, backgroundColor: 'transparent', width: 54, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingVertical: 0, paddingHorizontal: 0 }}
-                    value={weight}
-                    onChangeText={text => {
-                      const num = text.replace(/[^0-9]/g, '');
-                      let val = num;
-                      if (val.length > 3) val = val.slice(0, 3);
-                      setWeight(val);
-                    }}
-                    keyboardType="numeric"
-                    maxLength={3}
-                    placeholder="Weight"
+                    style={{ color: 'white', fontSize: 14, flex: 1, backgroundColor: 'transparent', padding: 0, margin: 0 }}
+                    value={firstName || ''}
+                    onChangeText={setFirstName}
+                    placeholder="First name"
                     placeholderTextColor="rgba(255,255,255,0.5)"
-                    inputMode="numeric"
+                    autoCapitalize="words"
                   />
-                  <Text style={{ color: 'white', fontSize: 14, marginLeft: 4 }}>lbs</Text>
+                </View>
+                <View style={[styles.inputContainer, { flex: 0.48 }]}> 
+                  <TextInput
+                    style={{ color: 'white', fontSize: 14, flex: 1, backgroundColor: 'transparent', padding: 0, margin: 0 }}
+                    value={lastName}
+                    onChangeText={setLastName}
+                    placeholder="Last name"
+                    placeholderTextColor="rgba(255,255,255,0.5)"
+                    autoCapitalize="words"
+                  />
                 </View>
               </View>
-            </View>
-            {/* Tolerance Level Slider */}
-            <ToleranceSlider />
-            {/* Action Button */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.mainButton}
-              onPress={() => router.push('../Home/HomeScreen')}
-            >
-              <Text style={styles.buttonText}>Discover Your BAC Tolerance</Text>
-            </TouchableOpacity>
-          </View>{/* end formContainer */}
-        </View>{/* end contentContainer */}
-      </SafeAreaView>{/* end safeArea */}
-    </View>
+              {/* Divider 1 */}
+              <Divider />
+              {/* Row 2: Age & Gender */}
+              <View style={styles.row}>
+                <View style={[styles.inputContainer, { flex: 0.4 }]}> 
+                  <TextInput
+                    style={{ color: 'white', fontSize: 14, flex: 1, backgroundColor: 'transparent', padding: 0, margin: 0 }}
+                    placeholder="Age"
+                    placeholderTextColor="rgba(255,255,255,0.5)"
+                    keyboardType="numeric"
+                    maxLength={3}
+                    inputMode="numeric"
+                    onChangeText={text => {
+                      const numeric = text.replace(/[^0-9]/g, '');
+                      setAge(numeric);
+                    }}
+                    value={age}
+                  />
+                </View>
+                <GenderDropdown containerStyle={{ flex: 0.55 }} />
+              </View>
+              {/* Row 3: Height & Weight */}
+              <View style={styles.row}>
+                {/* Height input with modal picker and label */}
+                <HeightPicker heightFt={heightFt} setHeightFt={setHeightFt} heightIn={heightIn} setHeightIn={setHeightIn} />
+                {/* Weight input styled like Gender */}
+                <View style={[styles.inputContainer, { flex: 0.55, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', position: 'relative' }]}> 
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <TextInput
+                      style={{ color: 'white', fontSize: 14, backgroundColor: 'transparent', width: 54, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingVertical: 0, paddingHorizontal: 0 }}
+                      value={weight}
+                      onChangeText={text => {
+                        const num = text.replace(/[^0-9]/g, '');
+                        let val = num;
+                        if (val.length > 3) val = val.slice(0, 3);
+                        setWeight(val);
+                      }}
+                      keyboardType="numeric"
+                      maxLength={3}
+                      placeholder="Weight"
+                      placeholderTextColor="rgba(255,255,255,0.5)"
+                      inputMode="numeric"
+                    />
+                    <Text style={{ color: 'white', fontSize: 14, marginLeft: 4 }}>lbs</Text>
+                  </View>
+                </View>
+              </View>
+              {/* Tolerance Level Slider */}
+              <ToleranceSlider />
+              {/* Action Button */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.mainButton}
+                onPress={() => router.push('../Home/HomeScreen')}
+              >
+                <Text style={styles.buttonText}>Discover Your BAC Tolerance</Text>
+              </TouchableOpacity>
+            </View>{/* end formContainer */}
+          </View>{/* end contentContainer */}
+        </SafeAreaView>{/* end safeArea */}
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 

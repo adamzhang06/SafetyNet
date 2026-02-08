@@ -18,39 +18,41 @@ const MainLayout = ({ children }) => {
     router.replace('/screens/Home/HomeScreen');
   };
 
+  const handleProfilePress = () => {
+    setMenuOpen(false);
+    router.push('/screens/User/Profile');
+  };
   return (
-    <UserProvider>
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
-        {/* GLOBAL BACKGROUND BLOBS */}
-        <View style={styles.blobRed} />
-        <View style={styles.blobLight} />
-        <SafeAreaView style={styles.safeArea}>
-          {/* GLOBAL NAVBAR - Stays fixed at the top */}
-          <TopNavbar onNotificationPress={handleMenuPress} />
-          {/* Hamburger Menu Overlay */}
-          {menuOpen && (
-            <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={handleCloseMenu}>
-              <View style={styles.menuBox}>
-                <TouchableOpacity style={styles.menuItem} onPress={() => {}}>
-                  <Text style={styles.menuText}>Profile</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => {}}>
-                  <Text style={styles.menuText}>Settings</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.menuItem, styles.menuItemDanger]} onPress={handleLeaveGroup}>
-                  <Text style={styles.menuTextDanger}>Leave Group</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          )}
-          {/* PAGE CONTENT */}
-          <View style={styles.contentContainer}>
-            {children}
-          </View>
-        </SafeAreaView>
-      </View>
-    </UserProvider>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      {/* GLOBAL BACKGROUND BLOBS */}
+      <View style={styles.blobRed} />
+      <View style={styles.blobLight} />
+      <SafeAreaView style={styles.safeArea}>
+        {/* GLOBAL NAVBAR - Stays fixed at the top */}
+        <TopNavbar onNotificationPress={handleMenuPress} />
+        {/* Hamburger Menu Overlay */}
+        {menuOpen && (
+          <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={handleCloseMenu}>
+            <View style={styles.menuBox}>
+              <TouchableOpacity style={styles.menuItem} onPress={handleProfilePress}>
+                <Text style={styles.menuText}>Profile</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuItem} onPress={() => {}}>
+                <Text style={styles.menuText}>Settings</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.menuItem, styles.menuItemDanger]} onPress={handleLeaveGroup}>
+                <Text style={styles.menuTextDanger}>Leave Group</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        )}
+        {/* PAGE CONTENT */}
+        <View style={styles.contentContainer}>
+          {children}
+        </View>
+      </SafeAreaView>
+    </View>
   );
 };
 

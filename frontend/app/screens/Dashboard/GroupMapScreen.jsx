@@ -62,7 +62,7 @@ function SheetHandle({ onPress }) {
 }
 
 // Single row in the sheet: avatar, name, chat/call/alert icons
-function PersonRow({ person }) {
+function PersonRow({ person, onBellPress }) {
   return (
     <View style={styles.personRow}>
       <View style={[styles.personAvatar, { backgroundColor: person.color }]}>
@@ -76,7 +76,7 @@ function PersonRow({ person }) {
         <TouchableOpacity style={styles.actionIcon}>
           <Text style={styles.actionIconText}>📞</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionIcon}>
+        <TouchableOpacity style={styles.actionIcon} onPress={() => onBellPress(person)}>
           <Text style={styles.actionIconText}>🔔</Text>
         </TouchableOpacity>
       </View>
@@ -87,6 +87,7 @@ function PersonRow({ person }) {
 export default function GroupMapScreen() {
   const sheetHeight = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
   const [isExpanded, setIsExpanded] = useState(false);
+  const [toast, setToast] = useState(null); // { message: string, key: number }
 
   const expandSheet = () => {
     setIsExpanded(true);
@@ -121,48 +122,95 @@ export default function GroupMapScreen() {
     })
   ).current;
 
+  // Show toast for 2 seconds
+  const showToast = (message) => {
+    const key = Date.now();
+    setToast({ message, key });
+    setTimeout(() => {
+      setToast((t) => (t && t.key === key ? null : t));
+    }, 2000);
+  };
+
+  // Bell button handler
+  const handleBellPress = (person) => {
+    showToast(`You alerted ${person.name} of their BAC status`);
+    // Here you could also trigger a real notification/send event
+  };
+
   return (
     <MainLayout>
       <View style={styles.container}>
-      {/* ...existing code... */}
+        {/* ...existing code... */}
 
-      {/* Map area: title, location, pin, dots */}
-      <View style={styles.mapArea}>
-        <Text style={styles.title}>Your Group</Text>
-        <Text style={styles.location}>{CENTER_LOCATION}</Text>
-        <View style={styles.pinWrapper}>
-          <Text style={styles.pinIcon}>📍</Text>
+        {/* Map area: title, location, pin, dots */}
+        <View style={styles.mapArea}>
+          <Text style={styles.title}>Your Group</Text>
+          <Text style={styles.location}>{CENTER_LOCATION}</Text>
+          <View style={styles.pinWrapper}>
+            <Text style={styles.pinIcon}>📍</Text>
+          </View>
+          {/* Dots – each person as their own positioned object */}
+          <View style={styles.dotsContainer} pointerEvents="box-none">
+            {MOCK_PEOPLE.map((person) => (
+              <PersonDot key={person.id} person={person} />
+            ))}
+          </View>
         </View>
-        {/* Dots – each person as their own positioned object */}
-        <View style={styles.dotsContainer} pointerEvents="box-none">
-          {MOCK_PEOPLE.map((person) => (
-            <PersonDot key={person.id} person={person} />
-          ))}
-        </View>
-      </View>
 
-      {/* Slide-up bottom sheet */}
-      <Animated.View
-        style={[styles.sheet, { height: sheetHeight }]}
-        {...panResponder.panHandlers}
-      >
-        <SheetHandle onPress={toggleSheet} />
-        <ScrollView
-          style={styles.sheetScroll}
-          contentContainerStyle={styles.sheetScrollContent}
-          showsVerticalScrollIndicator={false}
+        {/* Slide-up bottom sheet */}
+        <Animated.View
+          style={[styles.sheet, { height: sheetHeight }]}
+          {...panResponder.panHandlers}
         >
-          {MOCK_PEOPLE.map((person) => (
-            <PersonRow key={person.id} person={person} />
-          ))}
-        </ScrollView>
-      </Animated.View>
+          <SheetHandle onPress={toggleSheet} />
+          <ScrollView
+            style={styles.sheetScroll}
+            contentContainerStyle={styles.sheetScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {MOCK_PEOPLE.map((person) => (
+              <PersonRow key={person.id} person={person} onBellPress={handleBellPress} />
+            ))}
+          </ScrollView>
+        </Animated.View>
 
-      <BottomNavBar />
+        {/* Toast notification */}
+        {toast && (
+          <View style={toastStyles.toastContainer} pointerEvents="none">
+            <Text style={toastStyles.toastText}>{toast.message}</Text>
+          </View>
+        )}
+
+        <BottomNavBar />
       </View>
     </MainLayout>
   );
 }
+// Toast styles
+const toastStyles = StyleSheet.create({
+  toastContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 100,
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  toastText: {
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    color: '#fff',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    fontSize: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {

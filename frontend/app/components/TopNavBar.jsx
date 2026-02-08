@@ -4,16 +4,23 @@ import { useUser } from '../context/UserContext';
 
 const TopNavbar = ({ imageUri, onNotificationPress }) => {
   const { firstName, photoUri } = useUser();
+  const WomanSilhouette = require('../assets/woman_silhouette.png');
+  let displayUri = photoUri;
+  if (!displayUri) {
+    displayUri = Image.resolveAssetSource(WomanSilhouette).uri;
+  }
+  // Always show a label: firstName or placeholder
+  const displayName = firstName && firstName.trim() ? firstName : 'Your Name';
   return (
     <View style={styles.header}>
       <View style={styles.userInfo}>
         <View style={styles.avatarWrapper}>
           <Image 
-            source={photoUri ? { uri: photoUri } : { uri: imageUri || 'https://placehold.co/32x32/png' }}
+            source={{ uri: displayUri }}
             style={styles.avatar} 
           />
         </View>
-        <Text style={styles.userName}>{firstName}</Text>
+        <Text style={styles.userName}>{displayName}</Text>
       </View>
       <TouchableOpacity onPress={onNotificationPress} style={styles.notificationButton}>
          <Image 
